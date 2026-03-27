@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🚦 TrafficOS — IoT Dashboard</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet" />
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+:root {
+  --red:     #ff2d2d;
+  --yellow:  #ffcc00;
+  --green:   #00ff88;
+  --bg:      #050a0f;
+  --panel:   #0a141e;
+  --border:  #0e2233;
+  --text:    #8ab8d4;
+  --bright:  #cce8ff;
+  --dim:     #1a3040;
+  --glow-r:  rgba(255, 45, 45, 0.6);
+  --glow-y:  rgba(255, 204, 0, 0.6);
+  --glow-g:  rgba(0, 255, 136, 0.6);
+  --font-hud: 'Orbitron', monospace;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-body: 'Exo 2', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px, rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(140,200,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 40%, rgba(140,200,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 20%, rgba(140,200,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 70%, rgba(140,200,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 85%, rgba(140,200,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 30%, rgba(140,200,255,0.4) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(14,34,51,0.9) 0%, transparent 100%);
+}
+
+.hud-logo {
+  font-family: var(--font-hud);
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: var(--bright);
+  text-shadow: 0 0 20px rgba(100,200,255,0.5);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hud-logo span { color: var(--green); }
+
+.hud-status {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--panel);
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #333;
+  transition: all 0.3s;
+}
+.status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+.status-dot.offline { background: var(--red); }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.hud-time {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+main {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  padding: 20px 28px 28px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(100,200,255,0.3), transparent);
+}
+
+.panel-label {
+  font-family: var(--font-hud);
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text);
+  opacity: 0.5;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.traffic-light-panel {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tl-housing {
+  width: 90px;
+  background: #080f15;
+  border: 2px solid #0d2030;
+  border-radius: 12px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 0 0 0 1px #0a1820, 0 8px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+  position: relative;
+  margin: 10px 0 20px;
+}
+.tl-housing::after {
+  content: '';
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px; height: 50px;
+  background: linear-gradient(180deg, #0d2030 0%, #060d14 100%);
+  border-radius: 0 0 3px 3px;
+}
+
+.tl-bulb {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.3s ease;
+}
+.tl-bulb::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.tl-bulb.red-bulb    { background: radial-gradient(circle at 35% 35%, #3a1010, #1a0505); border: 2px solid #2a0a0a; }
+.tl-bulb.yellow-bulb { background: radial-gradient(circle at 35% 35%, #3a3010, #1a1805); border: 2px solid #2a2508; }
+.tl-bulb.green-bulb  { background: radial-gradient(circle at 35% 35%, #083020, #041510); border: 2px solid #082515; }
+
+.tl-bulb.red-bulb.active {
+  background: radial-gradient(circle at 35% 35%, #ff9090, var(--red));
+  border-color: var(--red);
+  box-shadow: 0 0 15px var(--red), 0 0 40px var(--glow-r), 0 0 80px rgba(255,45,45,0.2);
+}
+.tl-bulb.yellow-bulb.active {
+  background: radial-gradient(circle at 35% 35%, #fff0a0, var(--yellow));
+  border-color: var(--yellow);
+  box-shadow: 0 0 15px var(--yellow), 0 0 40px var(--glow-y), 0 0 80px rgba(255,204,0,0.2);
+}
+.tl-bulb.green-bulb.active {
+  background: radial-gradient(circle at 35% 35%, #90ffcc, var(--green));
+  border-color: var(--green);
+  box-shadow: 0 0 15px var(--green), 0 0 40px var(--glow-g), 0 0 80px rgba(0,255,136,0.2);
+}
+
+.tl-bulb.blink { animation: blink-all 0.3s infinite alternate; }
+@keyframes blink-all { from { opacity: 0.2; } to { opacity: 1; } }
+
+.tl-state-label {
+  font-family: var(--font-hud);
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: var(--bright);
+  text-align: center;
+  margin-top: 60px;
+  transition: all 0.3s;
+  text-shadow: 0 0 20px currentColor;
+}
+.tl-state-label.red    { color: var(--red); }
+.tl-state-label.yellow { color: var(--yellow); }
+.tl-state-label.green  { color: var(--green); }
+
+.countdown-wrap {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.countdown-ring { position: relative; width: 70px; height: 70px; }
+.countdown-ring svg { transform: rotate(-90deg); }
+.countdown-ring circle { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+.countdown-ring .track { stroke: var(--dim); }
+.countdown-ring .fill  { stroke: var(--green); stroke-dasharray: 188; stroke-dashoffset: 0; }
+.countdown-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-hud); font-size: 1.2rem; font-weight: 700; color: var(--bright);
+}
+.countdown-label { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.2em; opacity: 0.4; }
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-key { opacity: 0.5; font-family: var(--font-mono); }
+.stat-val { font-family: var(--font-hud); font-size: 0.75rem; color: var(--bright); }
+
+.game-panel {
+  grid-column: 2; grid-row: 1;
+  min-height: 320px; padding: 0; overflow: hidden; position: relative;
+}
+
+.scene {
+  width: 100%; height: 320px;
+  position: relative;
+  background: linear-gradient(180deg, #050d14 0%, #071525 40%, #0a1c30 60%, #050a0f 100%);
+  overflow: hidden;
+}
+
+.skyline {
+  position: absolute;
+  bottom: 80px; left: 0; right: 0; height: 120px;
+  background:
+    linear-gradient(180deg, transparent 30%, #081420 30%) 0px 0 / 40px 100px no-repeat,
+    linear-gradient(180deg, transparent 10%, #081420 10%) 50px 0 / 60px 120px no-repeat,
+    linear-gradient(180deg, transparent 40%, #081420 40%) 120px 0 / 35px 80px no-repeat,
+    linear-gradient(180deg, transparent 5%,  #081420 5%)  165px 0 / 55px 120px no-repeat,
+    linear-gradient(180deg, transparent 25%, #081420 25%) 230px 0 / 45px 100px no-repeat,
+    linear-gradient(180deg, transparent 15%, #081420 15%) 285px 0 / 70px 120px no-repeat,
+    linear-gradient(180deg, transparent 35%, #081420 35%) 365px 0 / 40px 90px no-repeat,
+    linear-gradient(180deg, transparent 8%,  #081420 8%)  415px 0 / 65px 120px no-repeat,
+    linear-gradient(180deg, transparent 30%, #081420 30%) 490px 0 / 50px 100px no-repeat,
+    linear-gradient(180deg, transparent 20%, #081420 20%) 550px 0 / 80px 120px no-repeat;
+  opacity: 0.8;
+}
+
+.window-lights {
+  position: absolute;
+  bottom: 80px; left: 0; right: 0; height: 120px;
+  background-image:
+    radial-gradient(1.5px 1.5px at 15px 40px,  rgba(255,240,180,0.7) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 65px 25px,  rgba(255,240,180,0.6) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 175px 35px, rgba(255,240,180,0.7) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 300px 22px, rgba(255,240,180,0.6) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 430px 32px, rgba(255,240,180,0.7) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 565px 50px, rgba(100,200,255,0.5) 0%, transparent 100%);
+}
+
+.road {
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 80px;
+  background: #0d1a24;
+  border-top: 2px solid #0e2233;
+}
+.road-line {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  left: -100%; width: 200%; height: 4px;
+  background: repeating-linear-gradient(90deg, transparent 0px, transparent 30px, rgba(255,220,50,0.3) 30px, rgba(255,220,50,0.3) 70px);
+}
+.road-line.moving  { animation: road-scroll 0.8s linear infinite; }
+.road-line.slow    { animation: road-scroll 2s linear infinite; }
+.road-line.stopped { animation: none; }
+@keyframes road-scroll {
+  from { transform: translateX(0) translateY(-50%); }
+  to   { transform: translateX(100px) translateY(-50%); }
+}
+
+.scene-tl { position: absolute; right: 140px; bottom: 80px; display: flex; flex-direction: column; align-items: center; }
+.scene-tl-pole { width: 4px; height: 60px; background: linear-gradient(180deg, #0e2233, #061018); }
+.scene-tl-box {
+  width: 22px; background: #080f15; border: 1px solid #0d2030; border-radius: 4px;
+  padding: 4px; display: flex; flex-direction: column; gap: 3px; align-items: center;
+}
+.scene-bulb { width: 12px; height: 12px; border-radius: 50%; background: #111; transition: all 0.3s; }
+.scene-bulb.r.active { background: var(--red);    box-shadow: 0 0 8px var(--red); }
+.scene-bulb.y.active { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+.scene-bulb.g.active { background: var(--green);  box-shadow: 0 0 8px var(--green); }
+.scene-bulb.blink    { animation: blink-all 0.3s infinite alternate; }
+
+.car-wrap { position: absolute; bottom: 26px; left: 80px; transition: left 0.1s linear; }
+.car { width: 80px; height: 36px; position: relative; }
+.car-body {
+  position: absolute; bottom: 10px; left: 0; right: 0; height: 24px;
+  background: linear-gradient(180deg, #1a6fd4, #0e4a9a);
+  border-radius: 4px 6px 2px 2px; border: 1px solid #2288ff;
+}
+.car-cabin {
+  position: absolute; bottom: 22px; left: 16px; width: 40px; height: 18px;
+  background: linear-gradient(180deg, #1c2a40, #0e1e30);
+  border-radius: 4px 4px 0 0; border: 1px solid #1a3050; border-bottom: none;
+}
+.car-cabin::before, .car-cabin::after {
+  content: ''; position: absolute; top: 3px; height: 10px;
+  background: rgba(140,200,255,0.15); border-radius: 2px; border: 1px solid rgba(100,180,255,0.2);
+}
+.car-cabin::before { left: 3px; width: 14px; }
+.car-cabin::after  { right: 3px; width: 14px; }
+.car-headlight {
+  position: absolute; right: -3px; bottom: 15px; width: 5px; height: 5px;
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 0 8px 2px rgba(255,250,200,0.8), 0 0 30px 10px rgba(255,250,180,0.2);
+}
+.car-tail {
+  position: absolute; left: -2px; bottom: 15px; width: 4px; height: 4px;
+  border-radius: 50%; background: var(--red); box-shadow: 0 0 5px var(--red);
+}
+.car-tail.brake { box-shadow: 0 0 10px 4px rgba(255,0,0,0.6); }
+.car-wheel {
+  position: absolute; bottom: 0; width: 14px; height: 14px;
+  border-radius: 50%; background: #0a1520; border: 2px solid #1a3050; overflow: hidden;
+}
+.car-wheel::after {
+  content: ''; position: absolute; inset: 3px;
+  border-radius: 50%; background: #0d1e30; border: 1px solid #0e2540;
+}
+.car-wheel.front { right: 8px; }
+.car-wheel.rear  { left: 8px; }
+.car-wheel.spin      { animation: spin 0.4s linear infinite; }
+.car-wheel.slow-spin { animation: spin 1.2s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.car-exhaust { position: absolute; left: -14px; bottom: 8px; }
+.car-exhaust-puff {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(150,180,200,0.15); position: absolute; animation: exhaust 0.8s infinite;
+}
+.car-exhaust-puff:nth-child(2) { animation-delay: 0.3s; }
+.car-exhaust-puff:nth-child(3) { animation-delay: 0.6s; }
+@keyframes exhaust {
+  0%   { transform: scale(0.5) translateX(0);   opacity: 0.4; }
+  100% { transform: scale(2)   translateX(-12px); opacity: 0; }
+}
+
+.speed-line {
+  position: absolute; right: 85px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(100,180,255,0.4));
+  border-radius: 1px; opacity: 0; transition: opacity 0.3s;
+}
+.speed-line.visible { opacity: 1; animation: speed-lines 0.4s infinite linear; }
+.speed-line:nth-child(1) { top: 18px; width: 40px; }
+.speed-line:nth-child(2) { top: 24px; width: 28px; animation-delay: 0.15s; }
+.speed-line:nth-child(3) { top: 30px; width: 36px; animation-delay: 0.08s; }
+@keyframes speed-lines { from { transform: translateX(0); } to { transform: translateX(20px); opacity: 0; } }
+
+.controls-panel { grid-column: 3; grid-row: 1 / 3; }
+
+.btn {
+  width: 100%; padding: 12px 20px; border: 1px solid; border-radius: 3px;
+  background: transparent; font-family: var(--font-hud); font-size: 0.7rem;
+  letter-spacing: 0.2em; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  position: relative; overflow: hidden;
+}
+.btn::before { content: ''; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity 0.2s; }
+.btn:hover::before { opacity: 0.07; }
+.btn:active { transform: scale(0.98); }
+
+.btn-start { color: var(--green); border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,136,0.1); }
+.btn-start:hover { box-shadow: 0 0 20px rgba(0,255,136,0.25); }
+.btn-stop  { color: var(--red);   border-color: var(--red);   box-shadow: 0 0 10px rgba(255,45,45,0.1); }
+.btn-stop:hover  { box-shadow: 0 0 20px rgba(255,45,45,0.25); }
+.btn-blink { color: var(--yellow);border-color: var(--yellow);box-shadow: 0 0 10px rgba(255,204,0,0.1); }
+.btn-blink:hover { box-shadow: 0 0 20px rgba(255,204,0,0.25); }
+.btn-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+
+.mode-display { margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 3px; }
+.mode-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 0.72rem; }
+.mode-key { font-family: var(--font-mono); opacity: 0.4; }
+.mode-val { font-family: var(--font-hud); font-size: 0.65rem; color: var(--green); }
+
+.event-log { margin-top: 14px; }
+.log-entry {
+  display: flex; gap: 8px; padding: 4px 0;
+  border-bottom: 1px solid rgba(14,34,51,0.6);
+  font-size: 0.68rem; font-family: var(--font-mono); opacity: 0.7; animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 0.7; } }
+.log-time { color: var(--text); opacity: 0.5; flex-shrink: 0; }
+.log-msg  { color: var(--bright); }
+.log-msg.green  { color: var(--green); }
+.log-msg.yellow { color: var(--yellow); }
+.log-msg.red    { color: var(--red); }
+
+.metrics-panel {
+  grid-column: 2; grid-row: 2;
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+}
+.metric-card { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 3px; padding: 14px; text-align: center; }
+.metric-val { font-family: var(--font-hud); font-size: 1.6rem; font-weight: 700; color: var(--bright); line-height: 1; margin-bottom: 4px; }
+.metric-val.green  { color: var(--green);  text-shadow: 0 0 15px var(--glow-g); }
+.metric-val.yellow { color: var(--yellow); text-shadow: 0 0 15px var(--glow-y); }
+.metric-val.red    { color: var(--red);    text-shadow: 0 0 15px var(--glow-r); }
+.metric-label { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.15em; opacity: 0.4; }
+
+.sound-btn {
+  background: transparent; border: 1px solid var(--border); border-radius: 3px;
+  padding: 4px 10px; color: var(--text); font-family: var(--font-mono); font-size: 0.7rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.sound-btn:hover { border-color: var(--text); }
+.sound-btn.active { border-color: var(--yellow); color: var(--yellow); }
+
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto; padding: 12px; }
+  .traffic-light-panel { grid-column: 1; grid-row: 1; }
+  .controls-panel { grid-column: 2; grid-row: 1; }
+  .game-panel { grid-column: 1 / 3; grid-row: 2; }
+  .metrics-panel { grid-column: 1 / 3; grid-row: 3; grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 540px) {
+  main { grid-template-columns: 1fr; }
+  .traffic-light-panel, .controls-panel, .game-panel, .metrics-panel { grid-column: 1; }
+  .metrics-panel { grid-template-columns: 1fr 1fr; }
+  header { padding: 12px; flex-wrap: wrap; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="hud-logo">🚦 <span>TRAFFIC</span>OS <span style="color:var(--text);font-size:0.6rem;font-weight:400">v2.4</span></div>
+  <div class="hud-status">
+    <div class="status-pill">
+      <div class="status-dot" id="fbDot"></div>
+      <span id="fbLabel">DISCONNECTED</span>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot" id="espDot"></div>
+      <span id="espLabel">ESP32 OFFLINE</span>
+    </div>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔇 SOUND</button>
+  </div>
+  <div class="hud-time" id="clockDisplay">--:--:--</div>
+</header>
+
+<!-- ═══ MAIN ═══ -->
+<main>
+
+  <!-- LEFT: Traffic Light -->
+  <section class="panel traffic-light-panel">
+    <div class="panel-label">Traffic Unit</div>
+    <div class="tl-housing">
+      <div class="tl-bulb red-bulb"    id="bulbRed"></div>
+      <div class="tl-bulb yellow-bulb" id="bulbYellow"></div>
+      <div class="tl-bulb green-bulb"  id="bulbGreen"></div>
+    </div>
+    <div class="tl-state-label" id="stateLabel">—</div>
+    <div class="countdown-wrap">
+      <div class="countdown-ring">
+        <svg viewBox="0 0 70 70" width="70" height="70">
+          <circle class="track" cx="35" cy="35" r="30"/>
+          <circle class="fill"  cx="35" cy="35" r="30" id="countdownArc"/>
+        </svg>
+        <div class="countdown-num" id="countdownNum">—</div>
+      </div>
+      <div class="countdown-label">SECONDS</div>
+    </div>
+    <div style="margin-top:20px;width:100%">
+      <div class="stat-row"><span class="stat-key">MODE</span><span class="stat-val" id="modeVal">—</span></div>
+      <div class="stat-row"><span class="stat-key">CYCLES</span><span class="stat-val" id="cycleCount">0</span></div>
+      <div class="stat-row"><span class="stat-key">UPTIME</span><span class="stat-val" id="uptimeVal">00:00</span></div>
+      <div class="stat-row"><span class="stat-key">LAST STATE</span><span class="stat-val" id="lastStateVal">—</span></div>
+    </div>
+  </section>
+
+  <!-- CENTER: Game Scene -->
+  <section class="panel game-panel">
+    <div class="scene" id="scene">
+      <div class="skyline"></div>
+      <div class="window-lights"></div>
+      <div class="speed-line" id="sl1"></div>
+      <div class="speed-line" id="sl2"></div>
+      <div class="speed-line" id="sl3"></div>
+      <div class="scene-tl">
+        <div class="scene-tl-box">
+          <div class="scene-bulb r" id="sb-r"></div>
+          <div class="scene-bulb y" id="sb-y"></div>
+          <div class="scene-bulb g" id="sb-g"></div>
+        </div>
+        <div class="scene-tl-pole"></div>
+      </div>
+      <div class="road">
+        <div class="road-line" id="roadLine"></div>
+      </div>
+      <div class="car-wrap" id="carWrap">
+        <div class="car" id="car">
+          <div class="car-exhaust">
+            <div class="car-exhaust-puff"></div>
+            <div class="car-exhaust-puff"></div>
+            <div class="car-exhaust-puff"></div>
+          </div>
+          <div class="car-cabin"></div>
+          <div class="car-body"></div>
+          <div class="car-headlight"></div>
+          <div class="car-tail" id="carTail"></div>
+          <div class="car-wheel front" id="wheelFront"></div>
+          <div class="car-wheel rear"  id="wheelRear"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Controls -->
+  <section class="panel controls-panel">
+    <div class="panel-label">System Controls</div>
+    <button class="btn btn-start" onclick="sendCommand(1)"><div class="btn-icon">▶</div>START SYSTEM</button>
+    <button class="btn btn-stop"  onclick="sendCommand(0)"><div class="btn-icon">■</div>STOP SYSTEM</button>
+    <button class="btn btn-blink" onclick="sendCommand(2)"><div class="btn-icon">⚡</div>BLINK MODE</button>
+    <div class="mode-display">
+      <div class="mode-row"><span class="mode-key">0 = OFF</span>   <span class="mode-val" id="m0">◉</span></div>
+      <div class="mode-row"><span class="mode-key">1 = NORMAL</span><span class="mode-val" id="m1">○</span></div>
+      <div class="mode-row"><span class="mode-key">2 = BLINK</span> <span class="mode-val" id="m2">○</span></div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="panel-label">Event Log</div>
+      <div class="event-log" id="eventLog"></div>
+    </div>
+  </section>
+
+  <!-- BOTTOM: Metrics -->
+  <section class="metrics-panel">
+    <div class="metric-card"><div class="metric-val green"  id="m-green">0</div><div class="metric-label">GREEN PHASES</div></div>
+    <div class="metric-card"><div class="metric-val yellow" id="m-yellow">0</div><div class="metric-label">YELLOW PHASES</div></div>
+    <div class="metric-card"><div class="metric-val red"    id="m-red">0</div><div class="metric-label">RED PHASES</div></div>
+    <div class="metric-card"><div class="metric-val"        id="m-total">0</div><div class="metric-label">TOTAL EVENTS</div></div>
+  </section>
+
+</main>
+
+<script>
+// ─── PASTE YOUR FIREBASE CREDENTIALS HERE ──────────
+const firebaseConfig = {
+  apiKey: "AIzaSyD4AMKk1SiqPu9GtL8glnC2inEmG2Utujc",
+  authDomain: "traffic-light-434eb.firebaseapp.com",
+  databaseURL: "https://traffic-light-434eb-default-rtdb.firebaseio.com",
+  projectId: "traffic-light-434eb",
+  storageBucket: "traffic-light-434eb.firebasestorage.app",
+  messagingSenderId: "913547612912",
+  appId: "1:913547612912:web:9f34a176dfafde0ee0a835"
+};
+// ───────────────────────────────────────────────────
+
+let db           = null;
+let soundEnabled = false;
+let currentState = 'OFF';
+let currentMode  = 0;
+let carX         = 80;
+let carSpeed     = 0;
+let animFrame    = null;
+let startTime    = Date.now();
+let cycleCount   = 0;
+let metrics      = { GREEN: 0, YELLOW: 0, RED: 0, total: 0 };
+let audioCtx     = null;
+
+// ─── AUTO CONNECT ON LOAD ──────────────────────────
+window.addEventListener('load', () => {
+  carLoop();
+  setInterval(updateClock, 1000);
+  updateClock();
+  addLog('Dashboard initialized', 'green');
+
+  try {
+    const app = firebase.initializeApp(firebaseConfig);
+    db = firebase.database(app);
+    db.ref('/trafficLight').on('value', snap => {
+      const data = snap.val();
+      if (data) applyState(data.trafficLightState || 'OFF', data.mode || 0, data.countdown || 0);
+    });
+    setConnected(true);
+    addLog('Firebase connected', 'green');
+  } catch (e) {
+    addLog('Firebase failed: ' + e.message, 'red');
+    setConnected(false);
+  }
+});
+
+function sendCommand(mode) {
+  currentMode = mode;
+  updateModeIndicator(mode);
+  if (db) {
+    db.ref('/trafficLight/mode').set(mode);
+    addLog(`Command: mode=${mode}`, mode === 1 ? 'green' : mode === 2 ? 'yellow' : 'red');
+  }
+}
+
+function applyState(state, mode, countdown) {
+  const prev = currentState;
+  currentState = state;
+  currentMode  = mode;
+
+  if (prev !== state && state !== 'OFF' && state !== 'BLINK') {
+    if (metrics[state] !== undefined) {
+      metrics[state]++;
+      metrics.total++;
+      if (state === 'GREEN' && prev === 'RED') cycleCount++;
+    }
+    updateMetrics();
+    addLog(`State → ${state}`, state.toLowerCase());
+    playSound(state);
+  }
+
+  updateTrafficLight(state);
+  updateCountdown(countdown, state);
+  updateModeIndicator(mode);
+  updateModeLabel(mode);
+  updateSceneBulbs(state);
+  updateCar(state);
+  updateSpeedLines(state);
+  updateESPStatus(state !== 'OFF');
+  document.getElementById('lastStateVal').textContent = prev !== state ? prev : '—';
+  document.getElementById('cycleCount').textContent = cycleCount;
+}
+
+function updateTrafficLight(state) {
+  const bulbs = {
+    RED:    document.getElementById('bulbRed'),
+    YELLOW: document.getElementById('bulbYellow'),
+    GREEN:  document.getElementById('bulbGreen'),
+  };
+  Object.values(bulbs).forEach(b => b.classList.remove('active','blink'));
+  const lbl = document.getElementById('stateLabel');
+  lbl.className = 'tl-state-label';
+  if (state === 'BLINK') {
+    Object.values(bulbs).forEach(b => b.classList.add('blink'));
+    lbl.textContent = 'BLINK'; lbl.classList.add('yellow');
+  } else if (state === 'OFF') {
+    lbl.textContent = 'OFF';
+  } else if (bulbs[state]) {
+    bulbs[state].classList.add('active');
+    lbl.textContent = state; lbl.classList.add(state.toLowerCase());
+  }
+}
+
+const CIRCUMFERENCE = 2 * Math.PI * 30;
+function updateCountdown(secs, state) {
+  const arc = document.getElementById('countdownArc');
+  const num = document.getElementById('countdownNum');
+  const maxSecs = state === 'GREEN' ? 5 : state === 'YELLOW' ? 2 : 5;
+  const offset = CIRCUMFERENCE * (1 - (maxSecs > 0 ? secs / maxSecs : 0));
+  arc.style.strokeDashoffset = offset;
+  const colors = { GREEN: 'var(--green)', YELLOW: 'var(--yellow)', RED: 'var(--red)', BLINK: 'var(--yellow)', OFF: 'var(--dim)' };
+  arc.style.stroke = colors[state] || 'var(--dim)';
+  num.textContent = secs > 0 ? secs : '—';
+}
+
+function updateSceneBulbs(state) {
+  ['r','y','g'].forEach(c => document.getElementById(`sb-${c}`).classList.remove('active','blink'));
+  if (state === 'RED')    document.getElementById('sb-r').classList.add('active');
+  if (state === 'YELLOW') document.getElementById('sb-y').classList.add('active');
+  if (state === 'GREEN')  document.getElementById('sb-g').classList.add('active');
+  if (state === 'BLINK')  ['r','y','g'].forEach(c => document.getElementById(`sb-${c}`).classList.add('blink'));
+}
+
+function updateCar(state) {
+  const wf = document.getElementById('wheelFront');
+  const wr = document.getElementById('wheelRear');
+  const tail = document.getElementById('carTail');
+  const rl = document.getElementById('roadLine');
+  wf.className = 'car-wheel front';
+  wr.className = 'car-wheel rear';
+  if (state === 'GREEN') {
+    carSpeed = 2.5; wf.classList.add('spin'); wr.classList.add('spin');
+    tail.classList.remove('brake'); rl.className = 'road-line moving';
+  } else if (state === 'YELLOW') {
+    carSpeed = 0.8; wf.classList.add('slow-spin'); wr.classList.add('slow-spin');
+    tail.classList.add('brake'); rl.className = 'road-line slow';
+  } else {
+    carSpeed = 0; tail.classList.add('brake'); rl.className = 'road-line stopped';
+  }
+}
+
+function updateSpeedLines(state) {
+  const visible = state === 'GREEN';
+  [1,2,3].forEach(n => document.getElementById(`sl${n}`).classList.toggle('visible', visible));
+}
+
+function carLoop() {
+  const scene = document.getElementById('scene');
+  const sceneW = scene.offsetWidth || 700;
+  const stopZone = sceneW - 200;
+  if (carSpeed > 0) {
+    if (currentState !== 'GREEN' && carX >= stopZone - 10) carX = stopZone - 10;
+    else carX += carSpeed;
+  }
+  if (carX > sceneW + 50) carX = -100;
+  document.getElementById('carWrap').style.left = carX + 'px';
+  requestAnimationFrame(carLoop);
+}
+
+function updateModeIndicator(mode) {
+  [0,1,2].forEach(m => document.getElementById(`m${m}`).textContent = m === mode ? '◉' : '○');
+}
+function updateModeLabel(mode) {
+  document.getElementById('modeVal').textContent = { 0:'OFF', 1:'NORMAL', 2:'BLINK' }[mode] || '—';
+}
+function updateMetrics() {
+  document.getElementById('m-green').textContent  = metrics.GREEN;
+  document.getElementById('m-yellow').textContent = metrics.YELLOW;
+  document.getElementById('m-red').textContent    = metrics.RED;
+  document.getElementById('m-total').textContent  = metrics.total;
+}
+
+function addLog(msg, cls = '') {
+  const log = document.getElementById('eventLog');
+  const time = new Date().toLocaleTimeString('en', { hour12: false });
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg ${cls}">${msg}</span>`;
+  log.prepend(entry);
+  while (log.children.length > 8) log.removeChild(log.lastChild);
+}
+
+function setConnected(yes) {
+  document.getElementById('fbDot').className = 'status-dot ' + (yes ? 'online' : 'offline');
+  document.getElementById('fbLabel').textContent = yes ? 'FIREBASE LIVE' : 'DISCONNECTED';
+}
+function updateESPStatus(active) {
+  document.getElementById('espDot').className = 'status-dot ' + (active ? 'online' : '');
+  document.getElementById('espLabel').textContent = active ? 'ESP32 ONLINE' : 'ESP32 OFFLINE';
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('soundBtn');
+  btn.textContent = soundEnabled ? '🔊 SOUND' : '🔇 SOUND';
+  btn.classList.toggle('active', soundEnabled);
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playSound(state) {
+  if (!soundEnabled || !audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = { GREEN:880, YELLOW:660, RED:440, BLINK:550 }[state] || 440;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+  } catch(e) {}
+}
+
+function updateClock() {
+  document.getElementById('clockDisplay').textContent = new Date().toLocaleTimeString('en', { hour12: false });
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  document.getElementById('uptimeVal').textContent =
+    String(Math.floor(elapsed/60)).padStart(2,'0') + ':' + String(elapsed%60).padStart(2,'0');
+}
+</script>
+</body>
+</html>
