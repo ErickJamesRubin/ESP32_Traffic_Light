@@ -32,9 +32,9 @@
 #define GREEN_PIN  21
 
 // ─── Traffic Light Timing (milliseconds) ───────────
-#define GREEN_DURATION  5000
-#define YELLOW_DURATION 2000
-#define RED_DURATION    5000
+#define GREEN_DURATION  25000
+#define YELLOW_DURATION 3000
+#define RED_DURATION    50000
 #define BLINK_INTERVAL  300
 
 // ─── Firebase Objects ───────────────────────────────
