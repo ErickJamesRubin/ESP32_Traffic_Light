@@ -34,6 +34,7 @@ header{position:relative;z-index:10;background:#050510;border-bottom:4px solid v
 .clock-display{font-family:var(--vt);font-size:1.4rem;color:var(--green);text-shadow:0 0 10px var(--green);letter-spacing:.1em;}
 .sound-btn{font-family:var(--pixel);font-size:.35rem;color:var(--yellow);background:#000;border:2px solid var(--yellow);padding:4px 8px;cursor:pointer;box-shadow:2px 2px 0 #000;}
 .sound-btn.muted{color:#555;border-color:#333;}
+
 main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 260px;grid-template-rows:auto auto auto;gap:10px;padding:10px 14px 20px;max-width:1440px;margin:0 auto;}
 .tl-panel{grid-column:1;grid-row:1/3;}
 .panel-title{font-family:var(--pixel);font-size:.4rem;color:var(--yellow);text-shadow:1px 1px 0 #aa6600;padding:6px 8px;background:#000;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:6px;letter-spacing:.05em;}
@@ -64,7 +65,8 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 .stat-cell{background:#000;border:2px solid #222;padding:5px 6px;}
 .stat-cell-key{font-family:var(--pixel);font-size:.28rem;color:#555;margin-bottom:2px;}
 .stat-cell-val{font-family:var(--vt);font-size:1rem;color:var(--bright);line-height:1;}
-/* SCENE */
+
+/* ══ SCENE ══ */
 .scene-panel{grid-column:2;grid-row:1;padding:0;overflow:hidden;}
 .scene{width:100%;height:310px;position:relative;background:#000814;overflow:hidden;}
 .sky{position:absolute;inset:0;background:linear-gradient(180deg,#000428 0%,#000c3a 40%,#001040 60%,#000814 100%);}
@@ -74,8 +76,9 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 .buildings{position:absolute;bottom:100px;left:0;right:0;height:120px;display:flex;align-items:flex-end;}
 .building{background:#0a0a20;border-top:3px solid #1a1a40;border-left:2px solid #111;border-right:2px solid #111;flex-shrink:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(0,0,0,.5) 8px,rgba(0,0,0,.5) 9px),repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(0,0,0,.4) 8px,rgba(0,0,0,.4) 9px);}
 .win-lights{position:absolute;bottom:100px;left:0;right:0;height:120px;pointer-events:none;}
+
+/* Road is 100px tall, vehicles run left→right */
 .road{position:absolute;bottom:0;left:0;right:0;height:100px;background:#111118;border-top:3px solid #2a2a40;}
-/* center yellow dashes */
 .road-center{position:absolute;top:36px;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,#ffff00 0,#ffff00 14px,transparent 14px,transparent 28px);opacity:.45;}
 .road-stripe{position:absolute;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,transparent 0,transparent 20px,rgba(255,255,255,.15) 20px,rgba(255,255,255,.15) 40px);}
 .road-stripe.lane1{top:14px;}.road-stripe.lane2{top:60px;}
@@ -84,12 +87,30 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 .road-stripe.stopped{animation:none;}
 @keyframes road-anim-r{from{background-position:0 0}to{background-position:40px 0}}
 .sidewalk{position:absolute;bottom:100px;left:0;right:0;height:8px;background:repeating-linear-gradient(90deg,#1a1a30 0,#1a1a30 8px,#222240 8px,#222240 16px);border-top:2px solid #333;}
-/* Zebra crossing */
-.zebra-wrap{position:absolute;bottom:0;display:flex;height:26px;z-index:6;}
-.z-stripe{height:26px;background:#eee;opacity:.6;}
-.z-gap{height:26px;background:transparent;}
-/* TL post in scene */
-.scene-tl{position:absolute;right:130px;bottom:98px;display:flex;flex-direction:column;align-items:center;z-index:5;}
+
+/* ══ ZEBRA CROSSING — VERTICAL stripes (crossing the road top-to-bottom) ══
+   Sits inside the road area, rendered as a column of horizontal white bars
+   spanning the full road height, positioned just left of the TL post.      */
+.zebra-crossing{
+  position:absolute;
+  /* horizontally: centered just under the TL post */
+  width:40px;
+  /* vertically: spans the full road height (100px) */
+  bottom:0;
+  height:100px;
+  z-index:6;
+  /* White stripes going top-to-bottom across the road */
+  background:repeating-linear-gradient(
+    180deg,
+    rgba(240,240,240,.65) 0px,
+    rgba(240,240,240,.65) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+/* ══ TL POST in scene ══ */
+.scene-tl{position:absolute;right:130px;bottom:98px;display:flex;flex-direction:column;align-items:center;z-index:10;}
 .scene-tl-box{background:#111;border:2px solid #444;box-shadow:2px 2px 0 #000;padding:3px;display:flex;flex-direction:column;gap:2px;align-items:center;}
 .scene-tl-pole{width:4px;height:72px;background:#444;border-left:1px solid #666;}
 .sbulb{width:10px;height:10px;background:#222;border:1px solid #444;}
@@ -97,17 +118,20 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 .sbulb.y.on{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
 .sbulb.g.on{background:var(--green);box-shadow:0 0 6px var(--green);}
 .sbulb.blink-anim{animation:pixel-blink .3s step-end infinite;}
+
 /* speed fx */
 .speed-fx{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(150,200,255,.5));opacity:0;pointer-events:none;}
 .speed-fx.show{opacity:1;animation:sfx .3s linear infinite;}
 @keyframes sfx{from{transform:translateX(0)}to{transform:translateX(30px);opacity:0}}
 .score-popup{position:absolute;font-family:var(--pixel);font-size:.5rem;color:var(--yellow);text-shadow:1px 1px 0 #aa6600;pointer-events:none;animation:score-rise 1.2s ease-out forwards;z-index:20;}
 @keyframes score-rise{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30px)}}
-/* LANES */
+
+/* ══ VEHICLE LANES ══ */
 .car-lane{position:absolute;left:0;right:0;overflow:visible;}
-.car-lane.front{bottom:28px;height:30px;}
-.car-lane.back{bottom:62px;height:26px;}
-/* Cars */
+.car-lane.front{bottom:8px;height:34px;}   /* front (lower) lane */
+.car-lane.back {bottom:52px;height:30px;}  /* back  (upper) lane */
+
+/* ══ PIXEL CARS ══ */
 .pcar{position:absolute;bottom:0;width:36px;height:20px;}
 .pcar .body{position:absolute;bottom:4px;left:0;right:0;height:12px;border:2px solid;}
 .pcar .roof{position:absolute;bottom:14px;left:8px;right:8px;height:8px;border:2px solid;border-bottom:none;}
@@ -116,12 +140,12 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 .pcar .headlight{position:absolute;right:-2px;bottom:7px;width:3px;height:3px;background:#ffffaa;box-shadow:0 0 6px #ffffaa,0 0 15px rgba(255,255,180,.5);}
 .pcar .taillight{position:absolute;left:-1px;bottom:7px;width:3px;height:3px;background:var(--red);}
 .pcar .taillight.brake{box-shadow:0 0 8px var(--red);}
-.car-blue .body{background:#0044aa;border-color:#0066ff;}.car-blue .roof{background:#003388;border-color:#0055cc;}
-.car-red .body{background:#aa0000;border-color:#ff2222;}.car-red .roof{background:#880000;border-color:#cc1111;}
-.car-green .body{background:#006600;border-color:#00cc00;}.car-green .roof{background:#004400;border-color:#008800;}
+.car-blue   .body{background:#0044aa;border-color:#0066ff;}.car-blue   .roof{background:#003388;border-color:#0055cc;}
+.car-red    .body{background:#aa0000;border-color:#ff2222;}.car-red    .roof{background:#880000;border-color:#cc1111;}
+.car-green  .body{background:#006600;border-color:#00cc00;}.car-green  .roof{background:#004400;border-color:#008800;}
 .car-yellow .body{background:#aaaa00;border-color:#ffff00;}.car-yellow .roof{background:#888800;border-color:#cccc00;}
-.car-pink .body{background:#880055;border-color:#ff44aa;}.car-pink .roof{background:#660033;border-color:#cc2288;}
-.car-white .body{background:#aaaacc;border-color:#ccccee;}.car-white .roof{background:#8888aa;border-color:#aaaacc;}
+.car-pink   .body{background:#880055;border-color:#ff44aa;}.car-pink   .roof{background:#660033;border-color:#cc2288;}
+.car-white  .body{background:#aaaacc;border-color:#ccccee;}.car-white  .roof{background:#8888aa;border-color:#aaaacc;}
 .ptruck{position:absolute;bottom:0;width:56px;height:24px;}
 .ptruck .truck-body{position:absolute;bottom:6px;left:0;right:0;height:14px;background:#334;border:2px solid #556;}
 .ptruck .truck-cab{position:absolute;bottom:6px;right:0;width:18px;height:18px;background:#445;border:2px solid #667;}
@@ -136,17 +160,43 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 .pbus .bus-headlight{position:absolute;right:-2px;bottom:10px;width:3px;height:4px;background:#ffffaa;box-shadow:0 0 8px #ffffaa;}
 .wheel-spin{animation:wspin .4s linear infinite;}.wheel-slow{animation:wspin 1.2s linear infinite;}
 @keyframes wspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-/* Pedestrians */
-.pedestrian{position:absolute;width:7px;height:16px;bottom:2px;z-index:8;}
-.ped-head{position:absolute;top:0;left:1px;width:5px;height:5px;border-radius:50%;}
-.ped-body{position:absolute;top:5px;left:1px;width:5px;height:7px;border-radius:1px;}
-.ped-leg-l,.ped-leg-r{position:absolute;bottom:0;width:2px;background:#333;border-radius:1px;}
-.ped-leg-l{left:1px;}.ped-leg-r{right:1px;}
+
+/* ══ PEDESTRIANS — walk TOP-TO-BOTTOM across the road (vertical crossing) ══ */
+/* They are positioned absolutely inside the scene, move along Y axis        */
+.pedestrian{
+  position:absolute;
+  width:6px;
+  height:12px;
+  z-index:12;
+  pointer-events:none;
+}
+.ped-head{
+  position:absolute;
+  top:0; left:1px;
+  width:4px; height:4px;
+  border-radius:50%;
+}
+.ped-body{
+  position:absolute;
+  top:4px; left:1px;
+  width:4px; height:5px;
+  border-radius:1px;
+}
+.ped-leg-l,.ped-leg-r{
+  position:absolute;
+  bottom:0;
+  width:2px;
+  border-radius:1px;
+}
+.ped-leg-l{left:0px;background:#444;}
+.ped-leg-r{right:0px;background:#444;}
+
 /* Creatures */
 .creature{position:absolute;image-rendering:pixelated;pointer-events:none;z-index:4;}
 .creature canvas{display:block;image-rendering:pixelated;}
 .creature-tag{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-family:'Press Start 2P',monospace;font-size:.2rem;color:#fff;text-shadow:1px 1px 0 #000;white-space:nowrap;opacity:0;transition:opacity .2s step-end;pointer-events:none;background:rgba(0,0,0,.7);padding:1px 3px;border:1px solid #444;}
 .creature:hover .creature-tag{opacity:1;}
+
 /* Controls */
 .controls-panel{grid-column:3;grid-row:1/3;}
 .ctrl-body{padding:10px;display:flex;flex-direction:column;gap:8px;}
@@ -177,19 +227,29 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 .metric-card .mc-val{font-family:var(--pixel);font-size:1rem;color:var(--bright);padding:8px 6px 6px;line-height:1;text-shadow:2px 2px 0 #000;}
 .metric-card.green-card .mc-val{color:var(--green);text-shadow:2px 2px 0 #000,0 0 10px var(--green);}
 .metric-card.yellow-card .mc-val{color:var(--yellow);text-shadow:2px 2px 0 #000,0 0 10px var(--yellow);}
-.metric-card.red-card .mc-val{color:var(--red);text-shadow:2px 2px 0 #000,0 0 10px var(--red);}
-.metric-card.blue-card .mc-val{color:var(--blue);text-shadow:2px 2px 0 #000,0 0 10px var(--blue);}
-.metric-card.pink-card .mc-val{color:var(--pink);text-shadow:2px 2px 0 #000,0 0 10px var(--pink);}
+.metric-card.red-card    .mc-val{color:var(--red);text-shadow:2px 2px 0 #000,0 0 10px var(--red);}
+.metric-card.blue-card   .mc-val{color:var(--blue);text-shadow:2px 2px 0 #000,0 0 10px var(--blue);}
+.metric-card.pink-card   .mc-val{color:var(--pink);text-shadow:2px 2px 0 #000,0 0 10px var(--pink);}
 .metric-card.orange-card .mc-val{color:var(--orange);text-shadow:2px 2px 0 #000,0 0 10px var(--orange);}
 .score-bar{position:fixed;top:0;right:0;z-index:10000;background:#000;border-left:3px solid var(--border);border-bottom:3px solid var(--border);padding:4px 10px;font-family:var(--pixel);font-size:.4rem;color:var(--yellow);}
-@media(max-width:960px){main{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;}.tl-panel{grid-column:1;grid-row:1;}.controls-panel{grid-column:2;grid-row:1;}.scene-panel{grid-column:1/3;grid-row:2;}.graph-panel{grid-column:1/3;grid-row:3;}.metrics-panel{grid-column:1/3;grid-row:4;grid-template-columns:repeat(3,1fr);}}
-@media(max-width:580px){main{grid-template-columns:1fr;}.tl-panel,.controls-panel,.scene-panel,.graph-panel{grid-column:1;}.metrics-panel{grid-column:1;grid-template-columns:repeat(2,1fr);}.arcade-title{font-size:.55rem;}}
+@media(max-width:960px){
+  main{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;}
+  .tl-panel{grid-column:1;grid-row:1;}.controls-panel{grid-column:2;grid-row:1;}
+  .scene-panel{grid-column:1/3;grid-row:2;}.graph-panel{grid-column:1/3;grid-row:3;}
+  .metrics-panel{grid-column:1/3;grid-row:4;grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:580px){
+  main{grid-template-columns:1fr;}
+  .tl-panel,.controls-panel,.scene-panel,.graph-panel{grid-column:1;}
+  .metrics-panel{grid-column:1;grid-template-columns:repeat(2,1fr);}
+  .arcade-title{font-size:.55rem;}
+}
 </style>
 </head>
 <body>
 <div class="score-bar">SCORE: <span id="scoreVal">000000</span></div>
 <header>
-  <div class="header-marquee"><span class="marquee-inner">★ INSERT COIN TO PLAY ★ &nbsp;&nbsp;&nbsp; TRAFFIC ARCADE v3.1 &nbsp;&nbsp;&nbsp; HIGH SCORE: 999999 &nbsp;&nbsp;&nbsp; ★ USE CONTROLS TO MANAGE TRAFFIC ★ &nbsp;&nbsp;&nbsp; FIREBASE REALTIME DATABASE &nbsp;&nbsp;&nbsp; ★ PLAYER 1 START ★ &nbsp;&nbsp;&nbsp; ESP32 IOT SYSTEM &nbsp;&nbsp;&nbsp;</span></div>
+  <div class="header-marquee"><span class="marquee-inner">★ INSERT COIN TO PLAY ★ &nbsp;&nbsp;&nbsp; TRAFFIC ARCADE v3.2 &nbsp;&nbsp;&nbsp; HIGH SCORE: 999999 &nbsp;&nbsp;&nbsp; ★ USE CONTROLS TO MANAGE TRAFFIC ★ &nbsp;&nbsp;&nbsp; FIREBASE REALTIME DATABASE &nbsp;&nbsp;&nbsp; ★ PLAYER 1 START ★ &nbsp;&nbsp;&nbsp; ESP32 IOT SYSTEM &nbsp;&nbsp;&nbsp;</span></div>
   <div class="header-main">
     <div class="arcade-title">🚦 TRAFFIC<br>ARCADE</div>
     <div class="header-pills">
@@ -201,7 +261,9 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
     <div class="clock-display" id="clockDisplay">00:00:00</div>
   </div>
 </header>
+
 <main>
+  <!-- LEFT: Traffic Light panel -->
   <div class="pixel-box tl-panel">
     <div class="panel-title">TRAFFIC UNIT</div>
     <div class="tl-body">
@@ -224,6 +286,8 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
       </div>
     </div>
   </div>
+
+  <!-- CENTER: Scene -->
   <div class="pixel-box scene-panel">
     <div class="panel-title">TRAFFIC CAM — LIVE VIEW</div>
     <div class="scene" id="scene">
@@ -231,6 +295,8 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
       <div class="stars" id="stars"></div>
       <div class="buildings" id="buildings"></div>
       <div class="win-lights" id="winLights"></div>
+
+      <!-- TL post — right:130px from scene edge, sits on sidewalk -->
       <div class="scene-tl" id="sceneTLEl">
         <div class="scene-tl-box">
           <div class="sbulb r" id="sb-r"></div>
@@ -239,24 +305,37 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
         </div>
         <div class="scene-tl-pole"></div>
       </div>
+
       <div class="sidewalk"></div>
-      <!-- Zebra crossing injected by JS -->
-      <div id="zebraWrap"></div>
+
+      <!-- Zebra crossing: vertical stripes spanning road height, under TL post -->
+      <!-- Positioned by JS after scene width is known -->
+      <div id="zebraCrossing" class="zebra-crossing"></div>
+
       <div class="road">
         <div class="road-center"></div>
         <div class="road-stripe lane1" id="stripe1"></div>
         <div class="road-stripe lane2" id="stripe2"></div>
       </div>
+
+      <!-- Speed fx -->
       <div class="speed-fx" id="sfx1" style="bottom:75px;right:155px;width:50px;"></div>
       <div class="speed-fx" id="sfx2" style="bottom:88px;right:180px;width:35px;"></div>
-      <div class="speed-fx" id="sfx3" style="bottom:38px;right:155px;width:45px;"></div>
-      <div class="speed-fx" id="sfx4" style="bottom:48px;right:175px;width:30px;"></div>
+      <div class="speed-fx" id="sfx3" style="bottom:30px;right:155px;width:45px;"></div>
+      <div class="speed-fx" id="sfx4" style="bottom:42px;right:175px;width:30px;"></div>
+
       <div id="creatureLayer" style="position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;"></div>
-      <div id="pedLayer" style="position:absolute;bottom:0;left:0;right:0;height:30px;z-index:8;pointer-events:none;"></div>
-      <div class="car-lane back" id="laneBack"></div>
+
+      <!-- Pedestrian layer: absolute, full scene size so peds can walk top→bottom -->
+      <div id="pedLayer" style="position:absolute;inset:0;pointer-events:none;z-index:11;overflow:hidden;"></div>
+
+      <!-- 2 vehicle lanes -->
+      <div class="car-lane back"  id="laneBack"></div>
       <div class="car-lane front" id="laneFront"></div>
     </div>
   </div>
+
+  <!-- RIGHT: Controls -->
   <div class="pixel-box controls-panel">
     <div class="panel-title">SYSTEM CONTROLS</div>
     <div class="ctrl-body">
@@ -274,6 +353,8 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
       </div>
     </div>
   </div>
+
+  <!-- GRAPH -->
   <div class="pixel-box graph-panel">
     <div class="panel-title">📊 TRAFFIC ANALYTICS</div>
     <div class="graph-body">
@@ -281,6 +362,8 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
       <div class="chart-wrap" style="height:160px;max-width:160px;"><canvas id="donutChart"></canvas></div>
     </div>
   </div>
+
+  <!-- METRICS -->
   <div class="metrics-panel">
     <div class="pixel-box metric-card green-card"><div class="mc-title">GREEN PHASES</div><div class="mc-val" id="m-green">0</div></div>
     <div class="pixel-box metric-card yellow-card"><div class="mc-title">YELLOW PHASES</div><div class="mc-val" id="m-yellow">0</div></div>
@@ -290,16 +373,23 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
     <div class="pixel-box metric-card orange-card"><div class="mc-title">AVG WAIT (SEC)</div><div class="mc-val" id="m-avg">0</div></div>
   </div>
 </main>
+
 <script>
-/* ═══ FIREBASE CONFIG ═══ */
+/* ═══════════════════════════════════════════
+   FIREBASE CONFIG
+═══════════════════════════════════════════ */
 const firebaseConfig={apiKey:"AIzaSyD4AMKk1SiqPu9GtL8glnC2inEmG2Utujc",authDomain:"traffic-light-434eb.firebaseapp.com",databaseURL:"https://traffic-light-434eb-default-rtdb.firebaseio.com",projectId:"traffic-light-434eb",storageBucket:"traffic-light-434eb.firebasestorage.app",messagingSenderId:"913547612912",appId:"1:913547612912:web:9f34a176dfafde0ee0a835"};
 
-/* ═══ AUDIO ENGINE ═══ */
-let audioCtx=null, soundEnabled=true, ambientSrc=null, ambientGain=null, hornTimer=null;
+/* ═══════════════════════════════════════════
+   AUDIO ENGINE
+═══════════════════════════════════════════ */
+let audioCtx=null,soundEnabled=true,ambientSrc=null,ambientGain=null,hornTimer=null;
 function getCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx;}
 function toggleSound(){
   soundEnabled=!soundEnabled;
-  const b=document.getElementById('soundBtn');b.textContent=soundEnabled?'🔊 SOUND ON':'🔇 SOUND OFF';b.classList.toggle('muted',!soundEnabled);
+  const b=document.getElementById('soundBtn');
+  b.textContent=soundEnabled?'🔊 SOUND ON':'🔇 SOUND OFF';
+  b.classList.toggle('muted',!soundEnabled);
   if(!soundEnabled){if(ambientGain)ambientGain.gain.setTargetAtTime(0,getCtx().currentTime,.3);clearTimeout(hornTimer);}
   else{if(ambientGain)ambientGain.gain.setTargetAtTime(.05,getCtx().currentTime,.3);scheduleHorn();}
 }
@@ -312,62 +402,69 @@ function startAmbient(){
   ambientGain=ctx.createGain();ambientGain.gain.value=soundEnabled?.05:0;
   const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=140;
   ambientSrc.connect(lp);lp.connect(ambientGain);ambientGain.connect(ctx.destination);
-  ambientSrc.start();
-  scheduleHorn();
+  ambientSrc.start();scheduleHorn();
 }
 function scheduleHorn(){clearTimeout(hornTimer);if(!soundEnabled)return;hornTimer=setTimeout(()=>{if(soundEnabled)playHorn(.05+Math.random()*.07);scheduleHorn();},(4+Math.random()*9)*1000);}
 function playHorn(vol=.12){
   if(!soundEnabled)return;const ctx=getCtx();
-  const configs=[{freqs:[350,440],dur:.18},{freqs:[220,275],dur:.38},{freqs:[480,600],dur:.12}];
-  const cfg=configs[Math.floor(Math.random()*configs.length)];
+  const cfgs=[{freqs:[350,440],dur:.18},{freqs:[220,275],dur:.38},{freqs:[480,600],dur:.12}];
+  const cfg=cfgs[Math.floor(Math.random()*cfgs.length)];
   cfg.freqs.forEach((f,i)=>{const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=f;const g=ctx.createGain();const t=ctx.currentTime+i*.01;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.025);g.gain.setValueAtTime(vol,t+cfg.dur-.04);g.gain.linearRampToValueAtTime(0,t+cfg.dur);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+cfg.dur+.05);});
 }
-function playBrake(){
-  if(!soundEnabled)return;const ctx=getCtx();const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(850,ctx.currentTime);o.frequency.linearRampToValueAtTime(380,ctx.currentTime+.22);const g=ctx.createGain();g.gain.setValueAtTime(.06,ctx.currentTime);g.gain.linearRampToValueAtTime(0,ctx.currentTime+.22);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.25);
-}
-function playPassBy(){
-  if(!soundEnabled)return;const ctx=getCtx(),len=ctx.sampleRate*.55;const buf=ctx.createBuffer(1,len,ctx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*.25;const src=ctx.createBufferSource();src.buffer=buf;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=280;bp.Q.value=.9;const g=ctx.createGain();g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(.07,ctx.currentTime+.12);g.gain.setValueAtTime(.07,ctx.currentTime+.28);g.gain.linearRampToValueAtTime(0,ctx.currentTime+.55);src.connect(bp);bp.connect(g);g.connect(ctx.destination);src.start();src.stop(ctx.currentTime+.6);
-}
-function playLightChime(state){
-  if(!soundEnabled)return;const ctx=getCtx();
-  const seqs={GREEN:[{f:523,t:0},{f:659,t:.1},{f:784,t:.2}],YELLOW:[{f:440,t:0},{f:392,t:.12}],RED:[{f:330,t:0},{f:262,t:.12}]};
-  (seqs[state]||[]).forEach(({f,t})=>{const o=ctx.createOscillator();o.type='sine';o.frequency.value=f;const g=ctx.createGain();const ct=ctx.currentTime+t;g.gain.setValueAtTime(0,ct);g.gain.linearRampToValueAtTime(.09,ct+.01);g.gain.exponentialRampToValueAtTime(.001,ct+.3);o.connect(g);g.connect(ctx.destination);o.start(ct);o.stop(ct+.35);});
-}
-function playPedBeep(){
-  if(!soundEnabled)return;const ctx=getCtx();const o=ctx.createOscillator();o.type='square';o.frequency.value=880;const g=ctx.createGain();g.gain.setValueAtTime(.045,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.08);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.09);
-}
+function playBrake(){if(!soundEnabled)return;const ctx=getCtx();const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(850,ctx.currentTime);o.frequency.linearRampToValueAtTime(380,ctx.currentTime+.22);const g=ctx.createGain();g.gain.setValueAtTime(.06,ctx.currentTime);g.gain.linearRampToValueAtTime(0,ctx.currentTime+.22);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.25);}
+function playPassBy(){if(!soundEnabled)return;const ctx=getCtx(),len=ctx.sampleRate*.55;const buf=ctx.createBuffer(1,len,ctx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*.25;const src=ctx.createBufferSource();src.buffer=buf;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=280;bp.Q.value=.9;const g=ctx.createGain();g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(.07,ctx.currentTime+.12);g.gain.setValueAtTime(.07,ctx.currentTime+.28);g.gain.linearRampToValueAtTime(0,ctx.currentTime+.55);src.connect(bp);bp.connect(g);g.connect(ctx.destination);src.start();src.stop(ctx.currentTime+.6);}
+function playLightChime(state){if(!soundEnabled)return;const ctx=getCtx();const seqs={GREEN:[{f:523,t:0},{f:659,t:.1},{f:784,t:.2}],YELLOW:[{f:440,t:0},{f:392,t:.12}],RED:[{f:330,t:0},{f:262,t:.12}]};(seqs[state]||[]).forEach(({f,t})=>{const o=ctx.createOscillator();o.type='sine';o.frequency.value=f;const g=ctx.createGain();const ct=ctx.currentTime+t;g.gain.setValueAtTime(0,ct);g.gain.linearRampToValueAtTime(.09,ct+.01);g.gain.exponentialRampToValueAtTime(.001,ct+.3);o.connect(g);g.connect(ctx.destination);o.start(ct);o.stop(ct+.35);});}
+function playPedBeep(){if(!soundEnabled)return;const ctx=getCtx();const o=ctx.createOscillator();o.type='square';o.frequency.value=880;const g=ctx.createGain();g.gain.setValueAtTime(.045,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.08);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.09);}
 
-/* ═══ STATE ═══ */
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
 let db=null,currentState='OFF',currentMode=0;
 let startTime=Date.now(),cycleCount=0,score=0,coins=0,vehiclesPassed=0,totalWaitTime=0,waitEvents=0;
 let metrics={GREEN:0,YELLOW:0,RED:0,total:0};
 const MAX_PTS=20;let lineData={labels:[],green:[],yellow:[],red:[]};
 
-/* ═══ SCENE INIT ═══ */
+/* ═══════════════════════════════════════════
+   SCENE INIT
+═══════════════════════════════════════════ */
 function initStars(){const c=document.getElementById('stars');for(let i=0;i<60;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()<.3?2:1;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*55}%;left:${Math.random()*100}%;--d:${(1.5+Math.random()*3).toFixed(1)}s`;c.appendChild(s);}}
 function initBuildings(){const c=document.getElementById('buildings');const cols=['#0a0a20','#080818','#0c0c25','#060615'];const ws=[30,40,35,50,28,45,38,55,32,42],hs=[80,110,70,120,90,100,75,115,85,95];for(let i=0;i<14;i++){const b=document.createElement('div');b.className='building';b.style.cssText=`width:${ws[i%ws.length]+(Math.random()*8|0)}px;height:${hs[i%hs.length]+(Math.random()*20|0)}px;background:${cols[i%cols.length]}`;c.appendChild(b);}const wl=document.getElementById('winLights');for(let i=0;i<40;i++){const d=document.createElement('div');d.style.cssText=`position:absolute;width:3px;height:3px;left:${Math.random()*90}%;bottom:${5+Math.random()*85}%;background:rgba(${Math.random()<.3?'100,200,255':'255,240,180'},${(.3+Math.random()*.5).toFixed(2)});animation:twinkle ${(2+Math.random()*4).toFixed(1)}s step-end infinite;animation-delay:${(Math.random()*4).toFixed(1)}s`;wl.appendChild(d);}}
 
-let zebraLeft=0, zebraRight=0;
+/*
+  ═══════════════════════════════════════════
+  ZEBRA CROSSING LAYOUT (VERTICAL)
+  ═══════════════════════════════════════════
+  The TL post is positioned right:130px (CSS).
+  Scene road is 100px tall at the bottom.
+  The zebra sits right below the pole base,
+  spanning the full road height (100px),
+  vertically striped (top→bottom) so it looks
+  like a real crosswalk when viewed from the side.
+  Cars must stop BEFORE reaching zebraX.
+*/
+let zebraX = 0; // left edge of zebra (in scene coords)
+const ZEBRA_W = 44; // width of the crossing zone
+
 function initZebra(){
-  const scene=document.getElementById('scene'),W=scene.offsetWidth||800;
-  // Position zebra under TL post (right:130px means pole center ~132px from right)
-  const tlCenter=W-132;
-  const zebraW=84;
-  zebraLeft=tlCenter-zebraW/2; zebraRight=zebraLeft+zebraW;
-  const wrap=document.getElementById('zebraWrap');
-  wrap.style.cssText=`position:absolute;bottom:0;left:${zebraLeft}px;width:${zebraW}px;height:26px;display:flex;z-index:6;`;
-  wrap.innerHTML='';
-  for(let i=0;i<10;i++){
-    const s=document.createElement('div');
-    s.style.cssText=`width:${i%2===0?8:0}px;height:26px;background:${i%2===0?'#eee':'transparent'};opacity:.6;`;
-    // Actually make proper stripes
-    if(i%2===0){s.style.width='8px';s.style.background='#eee';}
-    else{s.style.width='4px';s.style.background='transparent';}
-    wrap.appendChild(s);
-  }
+  const scene = document.getElementById('scene');
+  const W = scene.offsetWidth || 800;
+  // TL pole right edge is 130px from scene right, pole width ~4px, so center ≈ W-132
+  const poleCenterX = W - 132;
+  zebraX = poleCenterX - ZEBRA_W / 2;
+
+  const el = document.getElementById('zebraCrossing');
+  el.style.left  = zebraX + 'px';
+  el.style.width = ZEBRA_W + 'px';
+  // road is 100px tall, sits at bottom of scene
+  el.style.bottom = '0px';
+  el.style.height = '100px';
 }
 
-/* ═══ VEHICLES — Realistic queue logic ═══ */
+/* ═══════════════════════════════════════════
+   VEHICLES — Realistic queue stop logic
+   Cars stop BEFORE the zebra (zebraX - gap),
+   NOT at the TL post. Cars behind queue up.
+═══════════════════════════════════════════ */
 const VDEFS=[
   {type:'car',cls:'car-blue',  w:36,lane:'front',gap:5},
   {type:'car',cls:'car-red',   w:36,lane:'front',gap:5},
@@ -383,8 +480,8 @@ const VDEFS=[
 ];
 let frontV=[],backV=[],lastSF=0,lastSB=0,siF=1600,siB=2200,brakeCD=0;
 
-// TL stop line X: just before the zebra crossing left edge
-function stopLineX(){const scene=document.getElementById('scene');return (scene?scene.offsetWidth:800)-132-42;}
+// Stop line: vehicles stop just before the zebra crossing
+function getStopX(vw){ return zebraX - vw - 6; }
 
 function makeVehicleEl(def){
   let el=document.createElement('div');
@@ -393,7 +490,6 @@ function makeVehicleEl(def){
   else{el.className='pbus';el.innerHTML=`<div class="bus-body"></div><div class="bus-windows"></div><div class="bus-wheel-r"></div><div class="bus-wheel-f"></div><div class="bus-headlight"></div>`;}
   return el;
 }
-
 function spawnVehicle(laneId){
   const defs=VDEFS.filter(v=>v.lane===laneId);
   const def=defs[Math.floor(Math.random()*defs.length)];
@@ -405,63 +501,48 @@ function spawnVehicle(laneId){
   const v={el,x:-def.w-20,speed:spd,maxSpeed:spd,w:def.w,gap:def.gap,prevSpd:spd};
   if(laneId==='front')frontV.push(v); else backV.push(v);
 }
-
-function processLane(vehicles,laneId){
+function processLane(vehicles){
   const scene=document.getElementById('scene'),W=(scene?scene.offsetWidth:800);
-  const tlStop=stopLineX();
-  const isGo=currentState==='GREEN';
-  const isSlow=currentState==='YELLOW';
-  const isStop=!isGo&&!isSlow;
-  // Sort by x descending (furthest right = front of queue)
+  const isGo   = currentState==='GREEN';
+  const isSlow = currentState==='YELLOW';
+  const isStop = !isGo && !isSlow;
   const byX=[...vehicles].sort((a,b)=>b.x-a.x);
 
   for(let i=vehicles.length-1;i>=0;i--){
     const v=vehicles[i];
-    // Find the vehicle directly ahead of v (highest x that is still > v.x)
+    const tlStop=getStopX(v.w); // this car's TL stop line (front bumper position)
+
+    // Find the vehicle directly ahead
     let aheadV=null;
     for(const other of byX){if(other!==v&&other.x>v.x){aheadV=other;break;}}
-    // Personal stop target
+
+    // Personal stop target = min(TL stop line, gap behind car ahead)
     let myStop=tlStop;
-    if(aheadV){const queueStop=aheadV.x-v.w-v.gap;if(queueStop<myStop)myStop=queueStop;}
+    if(aheadV){const qs=aheadV.x-v.w-v.gap;if(qs<myStop)myStop=qs;}
 
     let spd=v.maxSpeed;
-
     if(isStop){
-      // RED: each car drives up to its personal stop (queue tail) at full speed, slows only near it
+      // During RED: drive at full speed until near personal stop, then decel
       if(v.x>=myStop){spd=0;}
-      else{
-        const dist=myStop-v.x;
-        if(dist<60)spd=v.maxSpeed*(dist/60);// gradual decel
-        // else full speed — car still far from queue, keeps going
-      }
+      else{const dist=myStop-v.x;if(dist<65)spd=v.maxSpeed*(dist/65);/* else full speed */}
     } else if(isSlow){
       if(v.x>=myStop-8)spd=0;
       else spd=v.maxSpeed*.35;
     } else {
       // GREEN: follow car ahead with gap
-      if(aheadV){
-        const gap=aheadV.x-v.x;
-        if(gap<v.w+v.gap+2)spd=0;
-        else if(gap<v.w+35)spd=Math.min(spd,aheadV.maxSpeed*.65);
-      }
+      if(aheadV){const gap=aheadV.x-v.x;if(gap<v.w+v.gap+2)spd=0;else if(gap<v.w+35)spd=Math.min(spd,aheadV.maxSpeed*.65);}
     }
 
-    // Brake squeal
     if(v.prevSpd>1.0&&spd<.15&&brakeCD<=0){playBrake();brakeCD=55;}
-    v.prevSpd=spd;
-    if(brakeCD>0)brakeCD--;
+    v.prevSpd=spd;if(brakeCD>0)brakeCD--;
 
-    v.x=Math.min(v.x+spd,W+v.w+40);// allow going off right edge freely when green
-    // Clamp to myStop when stopping
+    v.x+=spd;
     if(isStop||isSlow)v.x=Math.min(v.x,myStop);
     v.el.style.left=v.x+'px';
 
-    // Wheels
     v.el.querySelectorAll('[class*="wheel"]').forEach(w=>{w.className=w.className.replace(' wheel-spin','').replace(' wheel-slow','');if(spd>1.0)w.className+=' wheel-spin';else if(spd>.05)w.className+=' wheel-slow';});
-    // Taillights
     const tail=v.el.querySelector('.taillight');if(tail)tail.classList.toggle('brake',spd<.3&&v.x>60);
 
-    // Remove when off screen right
     if(v.x>W+v.w+30){
       vehiclesPassed++;score+=100;coins++;
       document.getElementById('m-vehicles').textContent=vehiclesPassed;
@@ -471,57 +552,104 @@ function processLane(vehicles,laneId){
     }
   }
 }
-
 function updateAllVehicles(){
   const now=Date.now();
   if(now-lastSF>siF&&currentMode!==0&&frontV.length<6){lastSF=now;siF=1100+Math.random()*1400;spawnVehicle('front');}
   if(now-lastSB>siB&&currentMode!==0&&backV.length<4){lastSB=now;siB=1700+Math.random()*1800;spawnVehicle('back');}
-  processLane(frontV,'front');processLane(backV,'back');
+  processLane(frontV);processLane(backV);
   const go=currentState==='GREEN';
   ['sfx1','sfx2','sfx3','sfx4'].forEach(id=>document.getElementById(id)?.classList.toggle('show',go&&frontV.length>0));
 }
-
 function showScorePopup(txt){const s=document.getElementById('scene'),p=document.createElement('div');p.className='score-popup';p.textContent=txt;p.style.cssText=`left:${s.offsetWidth-160}px;top:20px`;s.appendChild(p);setTimeout(()=>p.remove(),1200);}
 
-/* ═══ PEDESTRIANS ═══ */
-let peds=[],lastPedSpawn=0,pedBeepT=0;
-const PED_COLORS=['#3399ff','#ff6633','#cc33ff','#33cc33','#ffaa00','#ff3399'];
-const SKIN=['#ffddaa','#f5c289','#c68642','#8d5524'];
+/* ═══════════════════════════════════════════
+   PEDESTRIANS — Walk VERTICALLY across road
+   ═══════════════════════════════════════════
+   The scene is 310px tall. The road is the
+   bottom 100px. The sidewalk is just above road.
+   Pedestrians spawn at the TOP of the road area
+   (y = scene height - road height = 210px from top,
+   or equivalently bottom:100px) and walk DOWN
+   to the bottom of the scene (bottom:0).
+   They are positioned at zebraX horizontally,
+   staggered slightly so multiple peds don't overlap.
+═══════════════════════════════════════════ */
+let peds=[], lastPedSpawn=0, pedBeepT=0;
+const PED_COLORS=['#3399ff','#ff6633','#cc33ff','#33cc33','#ffaa00','#ff3399','#ffffff','#ff9900'];
+const SKIN_COLORS=['#ffddaa','#f5c289','#c68642','#8d5524','#ffd1a3'];
 
 function spawnPed(){
-  const layer=document.getElementById('pedLayer');
-  const goRight=Math.random()>.5;
-  const startX=goRight?zebraLeft-8:zebraRight+2;
-  const spd=.55+Math.random()*.4;
-  const el=document.createElement('div');el.className='pedestrian';
-  const skin=SKIN[Math.floor(Math.random()*SKIN.length)];
-  const shirt=PED_COLORS[Math.floor(Math.random()*PED_COLORS.length)];
-  el.innerHTML=`<div class="ped-head" style="background:${skin};border:1px solid #8d5524;"></div><div class="ped-body" style="background:${shirt};border:1px solid #000;"></div><div class="ped-leg-l" style="height:5px;"></div><div class="ped-leg-r" style="height:3px;"></div>`;
-  el.style.left=startX+'px';
-  layer.appendChild(el);
-  peds.push({el,x:startX,speed:goRight?spd:-spd,goRight,legT:0});
+  const scene  = document.getElementById('scene');
+  const sceneH = scene.offsetHeight || 310;
+  const ROAD_H = 100; // road is 100px tall
+
+  // Ped walks from top of road → bottom of road (top-to-bottom = increasing y)
+  const goDown = Math.random() > 0.5; // direction: top→bottom or bottom→top
+
+  // Start Y: top edge of road = sceneH - ROAD_H; bottom edge = sceneH
+  const startY = goDown ? (sceneH - ROAD_H - 12) : (sceneH - 6);
+  const speed  = 0.5 + Math.random() * 0.45;
+
+  // Stagger X slightly within zebra width so peds don't all stack
+  const xOffset = Math.floor(Math.random() * (ZEBRA_W - 8));
+  const pedX    = zebraX + xOffset;
+
+  const skin  = SKIN_COLORS[Math.floor(Math.random() * SKIN_COLORS.length)];
+  const shirt = PED_COLORS[Math.floor(Math.random() * PED_COLORS.length)];
+
+  const el = document.createElement('div');
+  el.className = 'pedestrian';
+  el.innerHTML = `
+    <div class="ped-head" style="background:${skin};border:1px solid #7a4a1e;"></div>
+    <div class="ped-body" style="background:${shirt};border:1px solid rgba(0,0,0,.5);"></div>
+    <div class="ped-leg-l" style="height:4px;background:#333;"></div>
+    <div class="ped-leg-r" style="height:3px;background:#333;"></div>
+  `;
+  el.style.left = pedX + 'px';
+  el.style.top  = startY + 'px';
+
+  document.getElementById('pedLayer').appendChild(el);
+  peds.push({ el, y: startY, x: pedX, speed: goDown ? speed : -speed, goDown, legT: 0, sceneH, ROAD_H });
   playPedBeep();
 }
 
 function updatePeds(){
-  const canWalk=currentState==='RED';
-  const now=Date.now();
-  if(canWalk&&now-lastPedSpawn>1600&&peds.length<5){lastPedSpawn=now;spawnPed();}
-  if(canWalk){pedBeepT++;if(pedBeepT%45===0)playPedBeep();}else{pedBeepT=0;}
-  for(let i=peds.length-1;i>=0;i--){
-    const p=peds[i];
-    if(!canWalk){p.el.remove();peds.splice(i,1);continue;}
-    p.x+=p.speed;p.el.style.left=p.x+'px';
-    // Animate legs
+  const canWalk = currentState === 'RED';
+  const now = Date.now();
+
+  if(canWalk && now - lastPedSpawn > 1400 && peds.length < 5){
+    lastPedSpawn = now; spawnPed();
+  }
+  if(canWalk){ pedBeepT++; if(pedBeepT % 45 === 0) playPedBeep(); }
+  else { pedBeepT = 0; }
+
+  for(let i = peds.length - 1; i >= 0; i--){
+    const p = peds[i];
+    if(!canWalk){ p.el.remove(); peds.splice(i,1); continue; }
+
+    p.y += p.speed;
+    p.el.style.top = p.y + 'px';
+
+    // Animate legs (alternating heights to simulate walking)
     p.legT++;
-    const ll=p.el.querySelector('.ped-leg-l'),lr=p.el.querySelector('.ped-leg-r');
-    if(ll&&lr){const t=Math.floor(p.legT/8)%2;ll.style.height=t?'5px':'3px';lr.style.height=t?'3px':'5px';}
-    // Done crossing
-    if((p.goRight&&p.x>zebraRight+20)||(!p.goRight&&p.x<zebraLeft-20)){p.el.remove();peds.splice(i,1);}
+    const ll = p.el.querySelector('.ped-leg-l');
+    const lr = p.el.querySelector('.ped-leg-r');
+    if(ll && lr){
+      const t = Math.floor(p.legT / 7) % 2;
+      ll.style.height = t ? '5px' : '3px';
+      lr.style.height = t ? '3px' : '5px';
+    }
+
+    // Remove when they've crossed to the other side
+    const doneDown = p.goDown  && p.y > p.sceneH + 4;
+    const doneUp   = !p.goDown && p.y < p.sceneH - p.ROAD_H - 20;
+    if(doneDown || doneUp){ p.el.remove(); peds.splice(i,1); }
   }
 }
 
-/* ═══ CHARTS ═══ */
+/* ═══════════════════════════════════════════
+   CHARTS
+═══════════════════════════════════════════ */
 let lChart,dChart;
 function initCharts(){
   Chart.defaults.color='#555588';Chart.defaults.borderColor='#1a1a3a';Chart.defaults.font.family="'VT323', monospace";
@@ -535,7 +663,9 @@ function updateCharts(){
   lChart.update();dChart.data.datasets[0].data=[metrics.GREEN||0,metrics.YELLOW||0,metrics.RED||0];dChart.update();
 }
 
-/* ═══ CREATURES ═══ */
+/* ═══════════════════════════════════════════
+   CREATURES
+═══════════════════════════════════════════ */
 const PS=3;
 function drawPx(ctx,grid,pal,px){grid.forEach((row,y)=>{[...row].forEach((ch,x)=>{if(ch==='.'||!pal[ch])return;ctx.fillStyle=pal[ch];ctx.fillRect(x*px,y*px,px,px);});});}
 const DF=[['....GGGG........','...GGGGGG.......','..GG.GGGG.GG.....','.GG..RRRR..GG...','GG...RYRR...GG..','G....RRRR....G..','.G...GGGGG...G..','.GG.GGGGGGG.GG..','..GGGGGGGGGGG...','...GGGGWGGGG....','....GGGGGGG.....','.....GGGGG......','......GGG.......','.......G........','................','................'],['................','....GGGG........','...GGGGGG.......', '.GG.RRRR.GG.....','GG..RYRR..GG....','G...RRRR...G....','.G..GGGGG..G....','.GGGGGGGGGGG....','..GGGGWGGGG.....','...GGGGGGG......','....GGGGG.......','.....GGG........','......G.........','................','................','................']];
@@ -553,7 +683,9 @@ function drawCFrame(c){const ctx=c.cvs.getContext('2d');ctx.clearRect(0,0,c.cw,c
 function updateCreatures(now){const W=document.getElementById('scene')?.offsetWidth||800;cSpawnT++;if(cSpawnT>200&&creatures.length<5){cSpawnT=0;spawnCreature();}for(let i=creatures.length-1;i>=0;i--){const c=creatures[i];c.x+=c.spd;c.wrap.style.left=c.x+'px';if(c.def.n==='GHOST'){c.y+=Math.sin(now*.002+i)*.4;c.wrap.style.top=c.y+'px';}if(c.def.n==='SLIME')c.wrap.style.top=(c.y-Math.abs(Math.sin(now*.004+i*1.5))*6)+'px';if(c.def.n==='DRAGON')c.wrap.style.top=(c.y+Math.sin(now*.0015+i)*5)+'px';if(now-c.lastFrame>c.def.fps){c.lastFrame=now;c.frame=(c.frame+1)%c.def.f.length;drawCFrame(c);}if((c.goRight&&c.x>W+c.cw+20)||(!c.goRight&&c.x<-c.cw-20)){c.wrap.remove();creatures.splice(i,1);}}}
 function initCreatures(){setTimeout(spawnCreature,500);setTimeout(spawnCreature,1500);setTimeout(spawnCreature,3000);}
 
-/* ═══ TRAFFIC LIGHT UI ═══ */
+/* ═══════════════════════════════════════════
+   TRAFFIC LIGHT UI
+═══════════════════════════════════════════ */
 let prevSoundState='';
 function updateLights(state){
   const r=document.getElementById('bulbRed'),y=document.getElementById('bulbYellow'),g=document.getElementById('bulbGreen');
@@ -581,7 +713,9 @@ function setEspStatus(ok){document.getElementById('espDot').className='pill-dot 
 function addLog(msg,cls=''){const log=document.getElementById('eventLog'),t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});const e=document.createElement('div');e.className='log-entry';e.innerHTML=`<span class="log-time">${t}</span><span class="log-msg ${cls}">${msg}</span>`;log.prepend(e);while(log.children.length>10)log.removeChild(log.lastChild);}
 function updateClock(){document.getElementById('clockDisplay').textContent=new Date().toLocaleTimeString('en',{hour12:false});const el=Math.floor((Date.now()-startTime)/1000);document.getElementById('uptimeVal').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0');}
 
-/* ═══ FIREBASE ═══ */
+/* ═══════════════════════════════════════════
+   FIREBASE
+═══════════════════════════════════════════ */
 function sendCommand(mode){currentMode=mode;updateModeDisplay(mode);score+=50;updateScore();if(db){db.ref('/trafficLight/mode').set(mode);addLog(`CMD MODE=${mode}`,mode===1?'green':mode===2?'yellow':'red');}else addLog('NOT CONNECTED','red');}
 function applyState(state,mode,countdown){
   const prev=currentState;currentState=state;currentMode=mode;
@@ -595,21 +729,54 @@ function applyState(state,mode,countdown){
   document.getElementById('cycleVal').textContent=cycleCount;document.getElementById('prevVal').textContent=prev!==state&&prev!=='OFF'?prev.slice(0,3):'---';
 }
 
-/* ═══ GAME LOOP ═══ */
-function gameLoop(ts=performance.now()){updateAllVehicles();updatePeds();updateCreatures(ts);requestAnimationFrame(gameLoop);}
+/* ═══════════════════════════════════════════
+   GAME LOOP
+═══════════════════════════════════════════ */
+function gameLoop(ts=performance.now()){
+  updateAllVehicles();
+  updatePeds();
+  updateCreatures(ts);
+  requestAnimationFrame(gameLoop);
+}
 
-/* ═══ BOOT ═══ */
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
 window.addEventListener('load',()=>{
-  initStars();initBuildings();initZebra();initCreatures();initCharts();
+  initStars(); initBuildings(); initCreatures(); initCharts();
+
+  // Init zebra after layout is computed
+  requestAnimationFrame(()=>{
+    initZebra();
+    // Start vehicles a beat after zebra is positioned
+    setTimeout(()=>spawnVehicle('front'), 300);
+    setTimeout(()=>spawnVehicle('front'),1400);
+    setTimeout(()=>spawnVehicle('back'),  900);
+  });
+
   document.getElementById('stripe1').className='road-stripe lane1 moving-r';
   document.getElementById('stripe2').className='road-stripe lane2 moving-r';
-  setTimeout(()=>spawnVehicle('front'),300);setTimeout(()=>spawnVehicle('front'),1400);setTimeout(()=>spawnVehicle('back'),900);
-  gameLoop();setInterval(updateClock,1000);updateClock();
-  addLog('SYSTEM BOOT OK','green');addLog('INSERT COIN','yellow');
-  // Unlock audio on first tap/click
-  document.addEventListener('click',()=>{getCtx();startAmbient();},{once:true});
-  document.addEventListener('keydown',()=>{getCtx();startAmbient();},{once:true});
-  try{const app=firebase.initializeApp(firebaseConfig);db=firebase.database(app);db.ref('/trafficLight').on('value',snap=>{const d=snap.val();if(d)applyState(d.trafficLightState||'OFF',d.mode||0,d.countdown||0);});setFbStatus(true);addLog('FIREBASE CONNECTED','green');}catch(e){addLog('FIREBASE ERR: '+e.message,'red');setFbStatus(false);}
+
+  gameLoop();
+  setInterval(updateClock,1000);
+  updateClock();
+  addLog('SYSTEM BOOT OK','green');
+  addLog('INSERT COIN','yellow');
+
+  // Unlock audio on first user interaction
+  document.addEventListener('click', ()=>{ getCtx(); startAmbient(); },{ once:true });
+  document.addEventListener('keydown',()=>{ getCtx(); startAmbient(); },{ once:true });
+
+  // Firebase
+  try{
+    const app=firebase.initializeApp(firebaseConfig);
+    db=firebase.database(app);
+    db.ref('/trafficLight').on('value',snap=>{
+      const d=snap.val();
+      if(d)applyState(d.trafficLightState||'OFF',d.mode||0,d.countdown||0);
+    });
+    setFbStatus(true);addLog('FIREBASE CONNECTED','green');
+  } catch(e){ addLog('FIREBASE ERR: '+e.message,'red');setFbStatus(false); }
 });
 </script>
 </body>
