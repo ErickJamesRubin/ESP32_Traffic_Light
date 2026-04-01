@@ -1,237 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>🚦 TRAFFIC ARCADE — IoT Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🪖 WARZONE TRAFFIC — IoT Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--red:#ff3333;--yellow:#ffff00;--green:#00ff44;--blue:#00aaff;--pink:#ff44cc;--orange:#ff8800;--bg:#0a0a1a;--panel:#0f0f2a;--border:#3333aa;--text:#aaaaff;--bright:#ffffff;--pixel:'Press Start 2P',monospace;--vt:'VT323',monospace;}
+/* ═══ GLOBAL — WAR THEME ═══ */
+:root{
+  --red:#ff2222;--yellow:#ffdd00;--green:#44ff44;
+  --blue:#00aaff;--pink:#ff44cc;--orange:#ff8800;
+  --bg:#0d0d08;--panel:#141408;--border:#556622;
+  --text:#aabb88;--bright:#ddeebb;--warn:#ffcc00;
+  --pixel:'Press Start 2P',monospace;--vt:'VT323',monospace;
+}
 *{box-sizing:border-box;margin:0;padding:0;image-rendering:pixelated;}
-body{background:var(--bg);color:var(--text);font-family:var(--pixel);min-height:100vh;overflow-x:hidden;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='8' height='8' fill='%2300ff44'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%2300ff44'/%3E%3C/svg%3E") 0 0,crosshair;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,80,.15) 3px,rgba(0,0,80,.15) 4px);pointer-events:none;z-index:9999;animation:flicker 8s infinite;}
-body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.7) 100%);pointer-events:none;z-index:9998;}
-@keyframes flicker{0%,95%,100%{opacity:1}96%{opacity:.95}97%{opacity:1}98%{opacity:.92}}
-.pixel-box{border:4px solid var(--border);box-shadow:inset 0 0 0 2px #000,4px 4px 0 #000,0 0 20px rgba(51,51,170,.3);background:var(--panel);position:relative;}
-.pixel-box::before{content:'';position:absolute;inset:2px;border:2px solid rgba(100,100,255,.1);pointer-events:none;}
-header{position:relative;z-index:10;background:#050510;border-bottom:4px solid var(--border);box-shadow:0 4px 0 #000,0 0 40px rgba(0,100,255,.2);overflow:hidden;}
-.header-marquee{background:var(--border);color:var(--yellow);font-family:var(--pixel);font-size:.45rem;padding:4px 0;white-space:nowrap;overflow:hidden;border-bottom:2px solid #000;}
-.marquee-inner{display:inline-block;animation:marquee 18s linear infinite;}
+body{background:var(--bg);color:var(--text);font-family:var(--pixel);min-height:100vh;overflow-x:hidden;
+  cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='7' width='16' height='2' fill='%2344ff44'/%3E%3Crect x='7' y='0' width='2' height='16' fill='%2344ff44'/%3E%3Ccircle cx='8' cy='8' r='2' fill='%23ffdd00'/%3E%3C/svg%3E") 8 8,crosshair;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,20,0,.12) 3px,rgba(0,20,0,.12) 4px);pointer-events:none;z-index:9999;animation:flicker 8s infinite;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%);pointer-events:none;z-index:9998;}
+@keyframes flicker{0%,95%,100%{opacity:1}96%{opacity:.93}97%{opacity:1}98%{opacity:.90}}
+
+/* ── PIXEL BOXES ── */
+.pixel-box{border:3px solid var(--border);box-shadow:inset 0 0 0 1px #000,3px 3px 0 #000,0 0 16px rgba(80,100,0,.35);background:var(--panel);position:relative;}
+.pixel-box::before{content:'';position:absolute;inset:2px;border:1px solid rgba(100,140,0,.15);pointer-events:none;}
+
+/* ── HEADER ── */
+header{position:relative;z-index:10;background:#080806;border-bottom:4px solid var(--border);box-shadow:0 4px 0 #000,0 0 30px rgba(50,80,0,.3);overflow:hidden;}
+.header-marquee{background:var(--border);color:#ffdd00;font-family:var(--pixel);font-size:.42rem;padding:4px 0;white-space:nowrap;overflow:hidden;border-bottom:2px solid #000;}
+.marquee-inner{display:inline-block;animation:marquee 20s linear infinite;}
 @keyframes marquee{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
 .header-main{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:12px;flex-wrap:wrap;}
-.arcade-title{font-family:var(--pixel);font-size:.75rem;color:var(--yellow);text-shadow:3px 3px 0 #aa6600,0 0 20px rgba(255,255,0,.5);animation:title-pulse 2s ease-in-out infinite alternate;letter-spacing:.05em;line-height:1.6;}
-@keyframes title-pulse{from{text-shadow:3px 3px 0 #aa6600,0 0 10px rgba(255,255,0,.3)}to{text-shadow:3px 3px 0 #ff8800,0 0 30px rgba(255,255,0,.8)}}
+.arcade-title{font-family:var(--pixel);font-size:.7rem;color:#ffdd00;text-shadow:2px 2px 0 #886600,0 0 18px rgba(255,220,0,.5);animation:title-pulse 2s ease-in-out infinite alternate;letter-spacing:.05em;line-height:1.7;}
+@keyframes title-pulse{from{text-shadow:2px 2px 0 #886600,0 0 8px rgba(255,220,0,.3)}to{text-shadow:2px 2px 0 #cc8800,0 0 24px rgba(255,220,0,.7)}}
 .header-pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.pill{display:flex;align-items:center;gap:6px;padding:4px 8px;border:2px solid #333;background:#000;font-family:var(--pixel);font-size:.35rem;box-shadow:2px 2px 0 #000;}
-.pill-dot{width:8px;height:8px;background:#333;border:1px solid #666;}
+.pill{display:flex;align-items:center;gap:6px;padding:4px 8px;border:2px solid #334411;background:#050503;font-family:var(--pixel);font-size:.32rem;box-shadow:2px 2px 0 #000;}
+.pill-dot{width:8px;height:8px;background:#333;border:1px solid #555;}
 .pill-dot.on{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink-dot 1s step-end infinite;}
 .pill-dot.off{background:var(--red);}
 @keyframes blink-dot{0%,100%{opacity:1}50%{opacity:.3}}
-.coin-display{font-family:var(--pixel);font-size:.45rem;color:var(--yellow);text-shadow:1px 1px 0 #aa6600;display:flex;align-items:center;gap:6px;}
-.clock-display{font-family:var(--vt);font-size:1.4rem;color:var(--green);text-shadow:0 0 10px var(--green);letter-spacing:.1em;}
-.sound-btn{font-family:var(--pixel);font-size:.35rem;color:var(--yellow);background:#000;border:2px solid var(--yellow);padding:4px 8px;cursor:pointer;box-shadow:2px 2px 0 #000;}
-.sound-btn.muted{color:#555;border-color:#333;}
+.coin-display{font-family:var(--pixel);font-size:.42rem;color:#ffdd00;text-shadow:1px 1px 0 #886600;display:flex;align-items:center;gap:6px;}
+.clock-display{font-family:var(--vt);font-size:1.4rem;color:#88ff44;text-shadow:0 0 10px #88ff44;letter-spacing:.1em;}
+.sound-btn{font-family:var(--pixel);font-size:.32rem;color:#aabb88;background:#050503;border:2px solid #446622;padding:4px 8px;cursor:pointer;box-shadow:2px 2px 0 #000;}
+.sound-btn.muted{color:#445533;border-color:#222;}
 
+/* ── SCORE BAR ── */
+.score-bar{position:fixed;top:0;right:0;z-index:10000;background:#050503;border-left:3px solid var(--border);border-bottom:3px solid var(--border);padding:4px 10px;font-family:var(--pixel);font-size:.38rem;color:#ffdd00;}
+
+/* ── TICKET COUNTER ── */
+.ticket-bar{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:10000;background:#1a0a00;border:2px solid #ff6600;padding:4px 14px;font-family:var(--pixel);font-size:.35rem;color:#ff8800;display:flex;gap:12px;align-items:center;}
+.ticket-bar span{color:#ffdd00;}
+
+/* ── MAIN LAYOUT ── */
 main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 260px;grid-template-rows:auto auto auto;gap:10px;padding:10px 14px 20px;max-width:1440px;margin:0 auto;}
 .tl-panel{grid-column:1;grid-row:1/3;}
-.panel-title{font-family:var(--pixel);font-size:.4rem;color:var(--yellow);text-shadow:1px 1px 0 #aa6600;padding:6px 8px;background:#000;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:6px;letter-spacing:.05em;}
-.panel-title::before{content:'▶';color:var(--green);font-size:.35rem;}
+.panel-title{font-family:var(--pixel);font-size:.38rem;color:#ffdd00;text-shadow:1px 1px 0 #886600;padding:6px 8px;background:#050503;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:6px;}
+.panel-title::before{content:'🪖';font-size:.5rem;}
+
+/* ── TRAFFIC LIGHT PANEL ── */
 .tl-body{padding:12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
-.tl-housing{width:70px;background:#111;border:3px solid #444;box-shadow:3px 3px 0 #000,inset 2px 2px 0 #222;padding:10px 8px;display:flex;flex-direction:column;gap:10px;align-items:center;position:relative;}
-.tl-housing::after{content:'';position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);width:6px;height:28px;background:#444;border:2px solid #222;}
+.tl-housing{width:70px;background:#0a0a05;border:3px solid #445522;box-shadow:3px 3px 0 #000,inset 2px 2px 0 #1a1a0a;padding:10px 8px;display:flex;flex-direction:column;gap:10px;align-items:center;position:relative;}
+.tl-housing::after{content:'';position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);width:6px;height:28px;background:#445522;border:2px solid #222;}
 .tl-bulb{width:44px;height:44px;border:3px solid #333;background:#1a1a1a;clip-path:polygon(20% 0%,80% 0%,100% 20%,100% 80%,80% 100%,20% 100%,0% 80%,0% 20%);transition:all .1s step-end;}
-.tl-bulb.red-off{background:#330000;}.tl-bulb.yellow-off{background:#332200;}.tl-bulb.green-off{background:#001100;}
-.tl-bulb.red-on{background:var(--red);box-shadow:0 0 0 4px rgba(255,50,50,.3),0 0 20px var(--red);animation:bulb-pop .1s step-end;}
-.tl-bulb.yellow-on{background:var(--yellow);box-shadow:0 0 0 4px rgba(255,255,0,.3),0 0 20px var(--yellow);animation:bulb-pop .1s step-end;}
-.tl-bulb.green-on{background:var(--green);box-shadow:0 0 0 4px rgba(0,255,50,.3),0 0 20px var(--green);animation:bulb-pop .1s step-end;}
+.tl-bulb.red-off{background:#2a0000;}.tl-bulb.yellow-off{background:#222200;}.tl-bulb.green-off{background:#002200;}
+.tl-bulb.red-on{background:var(--red);box-shadow:0 0 0 4px rgba(255,34,34,.35),0 0 18px var(--red);animation:bulb-pop .1s step-end;}
+.tl-bulb.yellow-on{background:var(--yellow);box-shadow:0 0 0 4px rgba(255,221,0,.35),0 0 18px var(--yellow);animation:bulb-pop .1s step-end;}
+.tl-bulb.green-on{background:var(--green);box-shadow:0 0 0 4px rgba(68,255,68,.35),0 0 18px var(--green);animation:bulb-pop .1s step-end;}
 .tl-bulb.blink-anim{animation:pixel-blink .3s step-end infinite;}
 @keyframes pixel-blink{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes bulb-pop{0%{transform:scale(1.2)}100%{transform:scale(1)}}
-.state-banner{font-family:var(--pixel);font-size:.55rem;text-align:center;padding:6px 10px;border:2px solid currentColor;box-shadow:2px 2px 0 #000;letter-spacing:.05em;margin-top:30px;min-width:130px;}
+.state-banner{font-family:var(--pixel);font-size:.52rem;text-align:center;padding:6px 10px;border:2px solid currentColor;box-shadow:2px 2px 0 #000;letter-spacing:.05em;margin-top:28px;min-width:130px;}
 .state-banner.red{color:var(--red);background:#1a0000;text-shadow:0 0 10px var(--red);}
-.state-banner.yellow{color:var(--yellow);background:#1a1a00;text-shadow:0 0 10px var(--yellow);}
+.state-banner.yellow{color:var(--yellow);background:#1a1400;text-shadow:0 0 10px var(--yellow);}
 .state-banner.green{color:var(--green);background:#001a00;text-shadow:0 0 10px var(--green);}
-.state-banner.off{color:#555;background:#111;}
+.state-banner.off{color:#445533;background:#0a0a05;}
 .countdown-block{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:4px;}
-.cd-label{font-family:var(--pixel);font-size:.3rem;color:#555;}
-.cd-number{font-family:var(--pixel);font-size:1.6rem;color:var(--bright);text-shadow:3px 3px 0 #000,0 0 15px currentColor;line-height:1;min-width:2ch;text-align:center;}
+.cd-label{font-family:var(--pixel);font-size:.28rem;color:#445533;}
+.cd-number{font-family:var(--pixel);font-size:1.5rem;color:var(--bright);text-shadow:2px 2px 0 #000,0 0 14px currentColor;line-height:1;min-width:2ch;text-align:center;}
 .cd-number.red{color:var(--red);}.cd-number.yellow{color:var(--yellow);}.cd-number.green{color:var(--green);}
-.cd-bar-wrap{width:130px;height:10px;background:#111;border:2px solid #333;box-shadow:2px 2px 0 #000;}
+.cd-bar-wrap{width:130px;height:10px;background:#111;border:2px solid #334411;box-shadow:2px 2px 0 #000;}
 .cd-bar{height:100%;background:var(--green);transition:width 1s linear,background .2s step-end;}
 .stats-grid{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;}
-.stat-cell{background:#000;border:2px solid #222;padding:5px 6px;}
-.stat-cell-key{font-family:var(--pixel);font-size:.28rem;color:#555;margin-bottom:2px;}
+.stat-cell{background:#050503;border:2px solid #222;padding:5px 6px;}
+.stat-cell-key{font-family:var(--pixel);font-size:.26rem;color:#445533;margin-bottom:2px;}
 .stat-cell-val{font-family:var(--vt);font-size:1rem;color:var(--bright);line-height:1;}
 
-/* ══ SCENE ══ */
+/* ── SCENE ── */
 .scene-panel{grid-column:2;grid-row:1;padding:0;overflow:hidden;}
-.scene{width:100%;height:310px;position:relative;background:#000814;overflow:hidden;}
-.sky{position:absolute;inset:0;background:linear-gradient(180deg,#000428 0%,#000c3a 40%,#001040 60%,#000814 100%);}
+.scene{width:100%;height:310px;position:relative;background:#0a1205;overflow:hidden;}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,#0a0c04 0%,#111808 40%,#0e1a06 60%,#080a02 100%);}
 .stars{position:absolute;inset:0;}
-.star{position:absolute;background:white;animation:twinkle var(--d,2s) step-end infinite;}
+.star{position:absolute;background:#ddff88;animation:twinkle var(--d,2s) step-end infinite;}
 @keyframes twinkle{0%,100%{opacity:1}50%{opacity:0}}
+
+/* War buildings */
 .buildings{position:absolute;bottom:100px;left:0;right:0;height:120px;display:flex;align-items:flex-end;}
-.building{background:#0a0a20;border-top:3px solid #1a1a40;border-left:2px solid #111;border-right:2px solid #111;flex-shrink:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(0,0,0,.5) 8px,rgba(0,0,0,.5) 9px),repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(0,0,0,.4) 8px,rgba(0,0,0,.4) 9px);}
+.building{background:#1a1a0a;border-top:3px solid #2a2a14;border-left:2px solid #111;border-right:2px solid #111;flex-shrink:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(0,0,0,.4) 8px,rgba(0,0,0,.4) 9px),repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(0,0,0,.35) 8px,rgba(0,0,0,.35) 9px);}
 .win-lights{position:absolute;bottom:100px;left:0;right:0;height:120px;pointer-events:none;}
 
-/* Road is 100px tall, vehicles run left→right */
-.road{position:absolute;bottom:0;left:0;right:0;height:100px;background:#111118;border-top:3px solid #2a2a40;}
-.road-center{position:absolute;top:36px;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,#ffff00 0,#ffff00 14px,transparent 14px,transparent 28px);opacity:.45;}
-.road-stripe{position:absolute;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,transparent 0,transparent 20px,rgba(255,255,255,.15) 20px,rgba(255,255,255,.15) 40px);}
+/* Road */
+.road{position:absolute;bottom:0;left:0;right:0;height:100px;background:#1a1a14;border-top:3px solid #2a2a1a;}
+.road-center{position:absolute;top:36px;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,#ffdd00 0,#ffdd00 14px,transparent 14px,transparent 28px);opacity:.4;}
+.road-stripe{position:absolute;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,transparent 0,transparent 20px,rgba(255,255,255,.12) 20px,rgba(255,255,255,.12) 40px);}
 .road-stripe.lane1{top:14px;}.road-stripe.lane2{top:60px;}
 .road-stripe.moving-r{animation:road-anim-r .3s linear infinite;}
 .road-stripe.slow-r{animation:road-anim-r 1.2s linear infinite;}
 .road-stripe.stopped{animation:none;}
 @keyframes road-anim-r{from{background-position:0 0}to{background-position:40px 0}}
-.sidewalk{position:absolute;bottom:100px;left:0;right:0;height:8px;background:repeating-linear-gradient(90deg,#1a1a30 0,#1a1a30 8px,#222240 8px,#222240 16px);border-top:2px solid #333;}
-
-/* ══ ZEBRA CROSSING — VERTICAL stripes (crossing the road top-to-bottom) ══
-   Sits inside the road area, rendered as a column of horizontal white bars
-   spanning the full road height, positioned just left of the TL post.      */
-.zebra-crossing{
-  position:absolute;
-  /* horizontally: centered just under the TL post */
-  width:40px;
-  /* vertically: spans the full road height (100px) */
-  bottom:0;
-  height:100px;
-  z-index:6;
-  /* White stripes going top-to-bottom across the road */
-  background:repeating-linear-gradient(
-    180deg,
-    rgba(240,240,240,.65) 0px,
-    rgba(240,240,240,.65) 8px,
-    transparent 8px,
-    transparent 16px
-  );
-}
-
-/* ══ TL POST in scene ══ */
+.sidewalk{position:absolute;bottom:100px;left:0;right:0;height:8px;background:repeating-linear-gradient(90deg,#1e1e12 0,#1e1e12 8px,#2a2a18 8px,#2a2a18 16px);border-top:2px solid #333;}
+.zebra-crossing{position:absolute;width:40px;bottom:0;height:100px;z-index:6;background:repeating-linear-gradient(180deg,rgba(220,220,180,.6) 0px,rgba(220,220,180,.6) 8px,transparent 8px,transparent 16px);}
 .scene-tl{position:absolute;right:130px;bottom:98px;display:flex;flex-direction:column;align-items:center;z-index:10;}
-.scene-tl-box{background:#111;border:2px solid #444;box-shadow:2px 2px 0 #000;padding:3px;display:flex;flex-direction:column;gap:2px;align-items:center;}
-.scene-tl-pole{width:4px;height:72px;background:#444;border-left:1px solid #666;}
-.sbulb{width:10px;height:10px;background:#222;border:1px solid #444;}
+.scene-tl-box{background:#0a0a05;border:2px solid #445522;box-shadow:2px 2px 0 #000;padding:3px;display:flex;flex-direction:column;gap:2px;align-items:center;}
+.scene-tl-pole{width:4px;height:72px;background:#445522;border-left:1px solid #667733;}
+.sbulb{width:10px;height:10px;background:#111;border:1px solid #334;}
 .sbulb.r.on{background:var(--red);box-shadow:0 0 6px var(--red);}
 .sbulb.y.on{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
 .sbulb.g.on{background:var(--green);box-shadow:0 0 6px var(--green);}
 .sbulb.blink-anim{animation:pixel-blink .3s step-end infinite;}
-
-/* speed fx */
-.speed-fx{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(150,200,255,.5));opacity:0;pointer-events:none;}
+.speed-fx{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(180,220,80,.5));opacity:0;pointer-events:none;}
 .speed-fx.show{opacity:1;animation:sfx .3s linear infinite;}
 @keyframes sfx{from{transform:translateX(0)}to{transform:translateX(30px);opacity:0}}
-.score-popup{position:absolute;font-family:var(--pixel);font-size:.5rem;color:var(--yellow);text-shadow:1px 1px 0 #aa6600;pointer-events:none;animation:score-rise 1.2s ease-out forwards;z-index:20;}
-@keyframes score-rise{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30px)}}
+.score-popup{position:absolute;font-family:var(--pixel);font-size:.45rem;color:#ffdd00;text-shadow:1px 1px 0 #886600;pointer-events:none;animation:score-rise 1.2s ease-out forwards;z-index:20;}
+@keyframes score-rise{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-28px)}}
+.ticket-popup{position:absolute;font-family:var(--pixel);font-size:.4rem;color:#ff6600;text-shadow:1px 1px 0 #440000;pointer-events:none;animation:score-rise 2s ease-out forwards;z-index:21;}
 
-/* ══ VEHICLE LANES ══ */
+/* ── LANES ── */
 .car-lane{position:absolute;left:0;right:0;overflow:visible;}
-.car-lane.front{bottom:8px;height:34px;}   /* front (lower) lane */
-.car-lane.back {bottom:52px;height:30px;}  /* back  (upper) lane */
+.car-lane.front{bottom:8px;height:34px;}
+.car-lane.back{bottom:52px;height:30px;}
 
-/* ══ PIXEL CARS ══ */
+/* ── PIXEL VEHICLES ── */
+/* Car */
 .pcar{position:absolute;bottom:0;width:36px;height:20px;}
 .pcar .body{position:absolute;bottom:4px;left:0;right:0;height:12px;border:2px solid;}
 .pcar .roof{position:absolute;bottom:14px;left:8px;right:8px;height:8px;border:2px solid;border-bottom:none;}
 .pcar .wheel-f,.pcar .wheel-r{position:absolute;bottom:0;width:8px;height:8px;background:#111;border:2px solid #555;}
 .pcar .wheel-f{right:2px;}.pcar .wheel-r{left:2px;}
-.pcar .headlight{position:absolute;right:-2px;bottom:7px;width:3px;height:3px;background:#ffffaa;box-shadow:0 0 6px #ffffaa,0 0 15px rgba(255,255,180,.5);}
+.pcar .headlight{position:absolute;right:-2px;bottom:7px;width:3px;height:3px;background:#ffffaa;box-shadow:0 0 6px #ffffaa;}
 .pcar .taillight{position:absolute;left:-1px;bottom:7px;width:3px;height:3px;background:var(--red);}
 .pcar .taillight.brake{box-shadow:0 0 8px var(--red);}
-.car-blue   .body{background:#0044aa;border-color:#0066ff;}.car-blue   .roof{background:#003388;border-color:#0055cc;}
-.car-red    .body{background:#aa0000;border-color:#ff2222;}.car-red    .roof{background:#880000;border-color:#cc1111;}
-.car-green  .body{background:#006600;border-color:#00cc00;}.car-green  .roof{background:#004400;border-color:#008800;}
-.car-yellow .body{background:#aaaa00;border-color:#ffff00;}.car-yellow .roof{background:#888800;border-color:#cccc00;}
-.car-pink   .body{background:#880055;border-color:#ff44aa;}.car-pink   .roof{background:#660033;border-color:#cc2288;}
-.car-white  .body{background:#aaaacc;border-color:#ccccee;}.car-white  .roof{background:#8888aa;border-color:#aaaacc;}
+/* Truck */
 .ptruck{position:absolute;bottom:0;width:56px;height:24px;}
 .ptruck .truck-body{position:absolute;bottom:6px;left:0;right:0;height:14px;background:#334;border:2px solid #556;}
 .ptruck .truck-cab{position:absolute;bottom:6px;right:0;width:18px;height:18px;background:#445;border:2px solid #667;}
 .ptruck .truck-wheel-f{position:absolute;bottom:0;right:3px;width:10px;height:10px;background:#111;border:2px solid #555;}
 .ptruck .truck-wheel-r{position:absolute;bottom:0;left:5px;width:10px;height:10px;background:#111;border:2px solid #555;}
 .ptruck .truck-headlight{position:absolute;right:-2px;bottom:10px;width:3px;height:3px;background:#ffffaa;box-shadow:0 0 8px #ffffaa;}
+/* Bus */
 .pbus{position:absolute;bottom:0;width:64px;height:26px;}
 .pbus .bus-body{position:absolute;bottom:6px;left:0;right:0;height:18px;background:#aa6600;border:2px solid #ffaa00;}
 .pbus .bus-windows{position:absolute;bottom:12px;left:4px;right:4px;height:8px;background:repeating-linear-gradient(90deg,rgba(100,200,255,.3) 0,rgba(100,200,255,.3) 8px,transparent 8px,transparent 11px);border-bottom:1px solid #ffaa00;}
 .pbus .bus-wheel-f{position:absolute;bottom:0;right:4px;width:10px;height:10px;background:#111;border:2px solid #555;}
 .pbus .bus-wheel-r{position:absolute;bottom:0;left:4px;width:10px;height:10px;background:#111;border:2px solid #555;}
 .pbus .bus-headlight{position:absolute;right:-2px;bottom:10px;width:3px;height:4px;background:#ffffaa;box-shadow:0 0 8px #ffffaa;}
+
+/* MILITARY vehicles */
+.ptank{position:absolute;bottom:0;width:50px;height:22px;}
+.ptank .tank-base{position:absolute;bottom:5px;left:0;right:0;height:13px;background:#4a5a2a;border:2px solid #6a7a3a;}
+.ptank .tank-turret{position:absolute;bottom:16px;left:14px;width:20px;height:10px;background:#3a4a1a;border:2px solid #5a6a2a;border-radius:2px;}
+.ptank .tank-barrel{position:absolute;bottom:20px;right:0px;width:22px;height:3px;background:#2a3a10;border:1px solid #4a5a20;}
+.ptank .tank-track-f{position:absolute;bottom:0;right:2px;width:12px;height:8px;background:#222;border:2px solid #444;}
+.ptank .tank-track-r{position:absolute;bottom:0;left:2px;width:12px;height:8px;background:#222;border:2px solid #444;}
+.ptank .tank-star{position:absolute;bottom:8px;left:8px;width:6px;height:6px;background:#ffdd00;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+
+.pjeep{position:absolute;bottom:0;width:40px;height:18px;}
+.pjeep .jeep-body{position:absolute;bottom:4px;left:0;right:0;height:10px;background:#5a6a30;border:2px solid #7a8a40;}
+.pjeep .jeep-cab{position:absolute;bottom:12px;left:10px;right:8px;height:8px;background:#4a5a22;border:2px solid #6a7a32;border-bottom:none;}
+.pjeep .jeep-wheel-f{position:absolute;bottom:0;right:3px;width:8px;height:8px;background:#111;border:2px solid #445;}
+.pjeep .jeep-wheel-r{position:absolute;bottom:0;left:3px;width:8px;height:8px;background:#111;border:2px solid #445;}
+.pjeep .jeep-gun{position:absolute;bottom:18px;left:6px;width:12px;height:3px;background:#333;border:1px solid #555;}
+.pjeep .jeep-headlight{position:absolute;right:-2px;bottom:6px;width:3px;height:3px;background:#ffffaa;box-shadow:0 0 5px #ffffaa;}
+
+/* MOTORCYCLE */
+.pmoto{position:absolute;bottom:0;width:24px;height:16px;}
+.pmoto .moto-body{position:absolute;bottom:4px;left:3px;right:3px;height:8px;background:#334;border:2px solid #558;}
+.pmoto .moto-wheel-f{position:absolute;bottom:0;right:1px;width:7px;height:7px;background:#111;border:2px solid #555;border-radius:50%;}
+.pmoto .moto-wheel-r{position:absolute;bottom:0;left:1px;width:7px;height:7px;background:#111;border:2px solid #555;border-radius:50%;}
+.pmoto .moto-rider{position:absolute;bottom:10px;left:6px;width:12px;height:10px;background:#223;border:1px solid #446;}
+.pmoto .moto-headlight{position:absolute;right:-1px;bottom:5px;width:2px;height:2px;background:#ffffaa;box-shadow:0 0 4px #ffffaa;}
+
+/* COLOR variants */
+.car-olive  .body{background:#4a5a2a;border-color:#6a7a3a;}.car-olive  .roof{background:#3a4a1a;border-color:#5a6a2a;}
+.car-khaki  .body{background:#7a7a40;border-color:#9a9a50;}.car-khaki  .roof{background:#6a6a30;border-color:#8a8a40;}
+.car-sand   .body{background:#aa9955;border-color:#ccbb66;}.car-sand   .roof{background:#998844;border-color:#bbaa55;}
+.car-darkgr .body{background:#334422;border-color:#4a5533;}.car-darkgr .roof{background:#223311;border-color:#3a4422;}
+.car-red    .body{background:#aa0000;border-color:#ff2222;}.car-red    .roof{background:#880000;border-color:#cc1111;}
+.car-blue   .body{background:#0044aa;border-color:#0066ff;}.car-blue   .roof{background:#003388;border-color:#0055cc;}
+
+/* AIR VEHICLES — float above road */
+.air-layer{position:absolute;left:0;right:0;overflow:visible;pointer-events:none;z-index:8;}
+.pplane{position:absolute;width:50px;height:18px;}
+.pplane .plane-body{position:absolute;top:6px;left:4px;right:4px;height:6px;background:#5a6a3a;border:2px solid #7a8a4a;border-radius:3px;}
+.pplane .plane-wing-l{position:absolute;top:2px;left:0;width:50px;height:8px;background:#4a5a2a;border:1px solid #6a7a3a;clip-path:polygon(35% 100%,65% 100%,100% 0%,0% 0%);}
+.pplane .plane-tail{position:absolute;top:0;right:6px;width:12px;height:10px;background:#3a4a1a;border:1px solid #5a6a2a;clip-path:polygon(0% 100%,100% 100%,100% 0%);}
+.pplane .plane-nose{position:absolute;top:6px;right:-4px;width:8px;height:6px;background:#6a7a4a;border:1px solid #8a9a5a;border-radius:0 50% 50% 0;}
+.pplane .plane-cockpit{position:absolute;top:4px;right:12px;width:10px;height:6px;background:rgba(100,180,255,.5);border:1px solid #8aaabb;}
+.pplane .plane-bomb{position:absolute;top:12px;left:18px;width:8px;height:4px;background:#333;border:1px solid #555;border-radius:2px;}
+
+.pchopper{position:absolute;width:44px;height:20px;}
+.pchopper .chop-body{position:absolute;top:8px;left:8px;right:4px;height:8px;background:#4a5a2a;border:2px solid #6a7a3a;border-radius:3px;}
+.pchopper .chop-blade{position:absolute;top:4px;left:0;right:0;height:3px;background:#2a3a18;border-radius:2px;}
+.pchopper .chop-tail{position:absolute;top:10px;left:0;width:10px;height:4px;background:#3a4a1a;border:1px solid #5a6a2a;}
+.pchopper .chop-rotor{position:absolute;top:2px;left:10px;width:24px;height:2px;background:#8aaa4a;border-radius:1px;transform-origin:center;animation:rotor-spin .15s linear infinite;}
+@keyframes rotor-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.pchopper .chop-cockpit{position:absolute;top:7px;right:6px;width:14px;height:7px;background:rgba(100,180,255,.5);border:1px solid #8aaabb;border-radius:2px;}
+
+/* WHEEL SPIN */
 .wheel-spin{animation:wspin .4s linear infinite;}.wheel-slow{animation:wspin 1.2s linear infinite;}
 @keyframes wspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 
-/* ══ PEDESTRIANS — walk TOP-TO-BOTTOM across the road (vertical crossing) ══ */
-/* They are positioned absolutely inside the scene, move along Y axis        */
-.pedestrian{
-  position:absolute;
-  width:6px;
-  height:12px;
-  z-index:12;
-  pointer-events:none;
-}
-.ped-head{
-  position:absolute;
-  top:0; left:1px;
-  width:4px; height:4px;
-  border-radius:50%;
-}
-.ped-body{
-  position:absolute;
-  top:4px; left:1px;
-  width:4px; height:5px;
-  border-radius:1px;
-}
-.ped-leg-l,.ped-leg-r{
-  position:absolute;
-  bottom:0;
-  width:2px;
-  border-radius:1px;
-}
-.ped-leg-l{left:0px;background:#444;}
-.ped-leg-r{right:0px;background:#444;}
+/* PEDESTRIANS */
+.pedestrian{position:absolute;width:6px;height:12px;z-index:12;pointer-events:none;}
+.ped-head{position:absolute;top:0;left:1px;width:4px;height:4px;border-radius:50%;}
+.ped-body{position:absolute;top:4px;left:1px;width:4px;height:5px;border-radius:1px;}
+.ped-leg-l,.ped-leg-r{position:absolute;bottom:0;width:2px;border-radius:1px;background:#444;}
+.ped-leg-l{left:0}.ped-leg-r{right:0}
 
-/* Creatures */
+/* TRAFFIC ENFORCER */
+.enforcer{position:absolute;z-index:15;width:10px;height:18px;pointer-events:none;}
+.enf-head{position:absolute;top:0;left:1px;width:8px;height:6px;background:#ffcc88;border:1px solid #aa8855;border-radius:50% 50% 0 0;}
+.enf-hat{position:absolute;top:-3px;left:0;width:10px;height:5px;background:#2244aa;border:1px solid #3355cc;border-radius:2px 2px 0 0;}
+.enf-body{position:absolute;top:6px;left:1px;width:8px;height:7px;background:#2244aa;border:1px solid #3355cc;}
+.enf-badge{position:absolute;top:8px;left:2px;width:3px;height:3px;background:#ffdd00;border-radius:50%;}
+.enf-legs{position:absolute;top:13px;left:2px;width:7px;height:5px;background:#111133;}
+.enf-arm{position:absolute;top:7px;right:-2px;width:3px;height:8px;background:#ffcc88;border:1px solid #aa8855;}
+
+/* TICKET PAPER */
+.ticket-slip{position:absolute;z-index:16;pointer-events:none;}
+.ticket-slip-inner{background:#ffffcc;border:2px solid #ff6600;padding:1px 3px;font-family:var(--pixel);font-size:.22rem;color:#880000;white-space:nowrap;box-shadow:1px 1px 0 #000;animation:ticket-wave .5s step-end infinite alternate;}
+@keyframes ticket-wave{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+
+/* WAR CREATURES / BACKGROUND */
 .creature{position:absolute;image-rendering:pixelated;pointer-events:none;z-index:4;}
 .creature canvas{display:block;image-rendering:pixelated;}
-.creature-tag{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-family:'Press Start 2P',monospace;font-size:.2rem;color:#fff;text-shadow:1px 1px 0 #000;white-space:nowrap;opacity:0;transition:opacity .2s step-end;pointer-events:none;background:rgba(0,0,0,.7);padding:1px 3px;border:1px solid #444;}
+.creature-tag{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-family:'Press Start 2P',monospace;font-size:.18rem;color:#88ff44;text-shadow:1px 1px 0 #000;white-space:nowrap;opacity:0;transition:opacity .2s step-end;pointer-events:none;background:rgba(0,0,0,.7);padding:1px 3px;border:1px solid #445522;}
 .creature:hover .creature-tag{opacity:1;}
 
-/* Controls */
+/* CONTROLS PANEL */
 .controls-panel{grid-column:3;grid-row:1/3;}
 .ctrl-body{padding:10px;display:flex;flex-direction:column;gap:8px;}
-.pixel-btn{width:100%;padding:10px 12px;font-family:var(--pixel);font-size:.38rem;letter-spacing:.05em;cursor:pointer;border:3px solid;background:#000;display:flex;align-items:center;gap:8px;transition:all .05s step-end;box-shadow:3px 3px 0 #000;text-transform:uppercase;}
+.pixel-btn{width:100%;padding:10px 12px;font-family:var(--pixel);font-size:.36rem;letter-spacing:.04em;cursor:pointer;border:3px solid;background:#050503;display:flex;align-items:center;gap:8px;transition:all .05s step-end;box-shadow:3px 3px 0 #000;text-transform:uppercase;}
 .pixel-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #000;}
 .pixel-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000;}
-.btn-start{color:var(--green);border-color:var(--green);text-shadow:0 0 8px var(--green);}
-.btn-stop{color:var(--red);border-color:var(--red);text-shadow:0 0 8px var(--red);}
-.btn-blink{color:var(--yellow);border-color:var(--yellow);text-shadow:0 0 8px var(--yellow);}
+.btn-start{color:var(--green);border-color:var(--green);text-shadow:0 0 6px var(--green);}
+.btn-stop{color:var(--red);border-color:var(--red);text-shadow:0 0 6px var(--red);}
+.btn-blink{color:var(--yellow);border-color:var(--yellow);text-shadow:0 0 6px var(--yellow);}
 .btn-icon{font-size:.7rem;}
-.mode-indicator{background:#000;border:2px solid #333;padding:8px;}
-.mode-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #111;font-family:var(--pixel);font-size:.3rem;}
-.mode-row:last-child{border-bottom:none;}.mode-key{color:#444;}.mode-dot{color:#222;font-size:.4rem;}
+.mode-indicator{background:#050503;border:2px solid #222;padding:8px;}
+.mode-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #111;font-family:var(--pixel);font-size:.28rem;}
+.mode-row:last-child{border-bottom:none;}.mode-key{color:#334422;}.mode-dot{color:#222;font-size:.38rem;}
 .mode-dot.active{color:var(--green);text-shadow:0 0 6px var(--green);}
 .log-section{margin-top:2px;}
-.log-title{font-family:var(--pixel);font-size:.35rem;color:var(--yellow);padding:4px 6px;background:#000;border:2px solid #333;border-bottom:none;display:flex;align-items:center;gap:6px;}
-.log-box{background:#000;border:2px solid #333;padding:4px;max-height:160px;overflow:hidden;}
-.log-entry{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid #111;font-family:var(--pixel);font-size:.28rem;animation:log-in .1s step-end;}
+.log-title{font-family:var(--pixel);font-size:.32rem;color:#ffdd00;padding:4px 6px;background:#050503;border:2px solid #334411;border-bottom:none;}
+.log-box{background:#050503;border:2px solid #334411;padding:4px;max-height:160px;overflow:hidden;}
+.log-entry{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid #111;font-family:var(--pixel);font-size:.26rem;animation:log-in .1s step-end;}
 @keyframes log-in{from{background:#111}to{background:transparent}}
-.log-time{color:#333;flex-shrink:0;}.log-msg{color:#aaa;}
-.log-msg.green{color:var(--green);}.log-msg.yellow{color:var(--yellow);}.log-msg.red{color:var(--red);}.log-msg.blue{color:var(--blue);}
+.log-time{color:#334422;flex-shrink:0;}.log-msg{color:#889966;}
+.log-msg.green{color:var(--green);}.log-msg.yellow{color:var(--yellow);}.log-msg.red{color:var(--red);}.log-msg.blue{color:var(--blue);}.log-msg.orange{color:#ff8800;}
+
+/* GRAPH + METRICS */
 .graph-panel{grid-column:2;grid-row:2;}
 .graph-body{padding:10px;display:flex;gap:10px;}
 .chart-wrap{flex:1;min-width:0;}
 .metrics-panel{grid-column:1/4;grid-row:3;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
 .metric-card{padding:0;overflow:hidden;}
-.metric-card .mc-title{font-family:var(--pixel);font-size:.28rem;color:#555;padding:4px 6px;background:#000;border-bottom:2px solid #222;}
+.metric-card .mc-title{font-family:var(--pixel);font-size:.26rem;color:#445533;padding:4px 6px;background:#050503;border-bottom:2px solid #222;}
 .metric-card .mc-val{font-family:var(--pixel);font-size:1rem;color:var(--bright);padding:8px 6px 6px;line-height:1;text-shadow:2px 2px 0 #000;}
-.metric-card.green-card .mc-val{color:var(--green);text-shadow:2px 2px 0 #000,0 0 10px var(--green);}
-.metric-card.yellow-card .mc-val{color:var(--yellow);text-shadow:2px 2px 0 #000,0 0 10px var(--yellow);}
-.metric-card.red-card    .mc-val{color:var(--red);text-shadow:2px 2px 0 #000,0 0 10px var(--red);}
-.metric-card.blue-card   .mc-val{color:var(--blue);text-shadow:2px 2px 0 #000,0 0 10px var(--blue);}
-.metric-card.pink-card   .mc-val{color:var(--pink);text-shadow:2px 2px 0 #000,0 0 10px var(--pink);}
-.metric-card.orange-card .mc-val{color:var(--orange);text-shadow:2px 2px 0 #000,0 0 10px var(--orange);}
-.score-bar{position:fixed;top:0;right:0;z-index:10000;background:#000;border-left:3px solid var(--border);border-bottom:3px solid var(--border);padding:4px 10px;font-family:var(--pixel);font-size:.4rem;color:var(--yellow);}
+.metric-card.green-card  .mc-val{color:var(--green);text-shadow:2px 2px 0 #000,0 0 8px var(--green);}
+.metric-card.yellow-card .mc-val{color:var(--yellow);text-shadow:2px 2px 0 #000,0 0 8px var(--yellow);}
+.metric-card.red-card    .mc-val{color:var(--red);text-shadow:2px 2px 0 #000,0 0 8px var(--red);}
+.metric-card.blue-card   .mc-val{color:var(--blue);text-shadow:2px 2px 0 #000,0 0 8px var(--blue);}
+.metric-card.pink-card   .mc-val{color:var(--pink);text-shadow:2px 2px 0 #000,0 0 8px var(--pink);}
+.metric-card.orange-card .mc-val{color:var(--orange);text-shadow:2px 2px 0 #000,0 0 8px var(--orange);}
+
 @media(max-width:960px){
   main{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;}
   .tl-panel{grid-column:1;grid-row:1;}.controls-panel{grid-column:2;grid-row:1;}
@@ -242,30 +286,35 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
   main{grid-template-columns:1fr;}
   .tl-panel,.controls-panel,.scene-panel,.graph-panel{grid-column:1;}
   .metrics-panel{grid-column:1;grid-template-columns:repeat(2,1fr);}
-  .arcade-title{font-size:.55rem;}
+  .arcade-title{font-size:.5rem;}
 }
 </style>
 </head>
 <body>
+
 <div class="score-bar">SCORE: <span id="scoreVal">000000</span></div>
+<div class="ticket-bar">🎫 TICKETS: <span id="ticketCount">0</span> &nbsp;|&nbsp; VIOLATIONS: <span id="violCount">0</span></div>
+
+<!-- ═══ HEADER ═══ -->
 <header>
-  <div class="header-marquee"><span class="marquee-inner">★ INSERT COIN TO PLAY ★ &nbsp;&nbsp;&nbsp; TRAFFIC ARCADE v3.2 &nbsp;&nbsp;&nbsp; HIGH SCORE: 999999 &nbsp;&nbsp;&nbsp; ★ USE CONTROLS TO MANAGE TRAFFIC ★ &nbsp;&nbsp;&nbsp; FIREBASE REALTIME DATABASE &nbsp;&nbsp;&nbsp; ★ PLAYER 1 START ★ &nbsp;&nbsp;&nbsp; ESP32 IOT SYSTEM &nbsp;&nbsp;&nbsp;</span></div>
+  <div class="header-marquee"><span class="marquee-inner">🪖 WARZONE TRAFFIC COMMAND ★ ESP32 IOT SYSTEM ★ FIREBASE REALTIME DB ★ ALL UNITS REPORT TO INTERSECTION ★ MILITARY CONVOY APPROACHING ★ FOLLOW TRAFFIC ORDERS OR FACE THE ENFORCER ★ 🎖️ WARZONE ARCADE v5.0 ★</span></div>
   <div class="header-main">
-    <div class="arcade-title">🚦 TRAFFIC<br>ARCADE</div>
+    <div class="arcade-title">🪖 WARZONE<br>TRAFFIC</div>
     <div class="header-pills">
       <div class="pill"><div class="pill-dot" id="fbDot"></div><span id="fbLabel">FIREBASE</span></div>
       <div class="pill"><div class="pill-dot" id="espDot"></div><span id="espLabel">ESP32</span></div>
     </div>
-    <div class="coin-display">🪙 COINS: <span id="coinVal">00</span></div>
+    <div class="coin-display">💰 SCORE: <span id="coinVal">00</span></div>
     <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊 SOUND ON</button>
     <div class="clock-display" id="clockDisplay">00:00:00</div>
   </div>
 </header>
 
+<!-- ═══ MAIN ═══ -->
 <main>
-  <!-- LEFT: Traffic Light panel -->
+  <!-- LEFT: Traffic Light -->
   <div class="pixel-box tl-panel">
-    <div class="panel-title">TRAFFIC UNIT</div>
+    <div class="panel-title">TRAFFIC COMMAND</div>
     <div class="tl-body">
       <div class="tl-housing">
         <div class="tl-bulb red-off" id="bulbRed"></div>
@@ -274,7 +323,7 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
       </div>
       <div class="state-banner off" id="stateLabel">-- OFF --</div>
       <div class="countdown-block">
-        <div class="cd-label">TIME LEFT</div>
+        <div class="cd-label">⏱ TIME LEFT</div>
         <div class="cd-number" id="cdNum">--</div>
         <div class="cd-bar-wrap"><div class="cd-bar" id="cdBar" style="width:0%"></div></div>
       </div>
@@ -289,14 +338,14 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 
   <!-- CENTER: Scene -->
   <div class="pixel-box scene-panel">
-    <div class="panel-title">TRAFFIC CAM — LIVE VIEW</div>
+    <div class="panel-title">BATTLEFIELD — LIVE FEED</div>
     <div class="scene" id="scene">
       <div class="sky"></div>
       <div class="stars" id="stars"></div>
       <div class="buildings" id="buildings"></div>
       <div class="win-lights" id="winLights"></div>
 
-      <!-- TL post — right:130px from scene edge, sits on sidewalk -->
+      <!-- TL post -->
       <div class="scene-tl" id="sceneTLEl">
         <div class="scene-tl-box">
           <div class="sbulb r" id="sb-r"></div>
@@ -307,9 +356,6 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
       </div>
 
       <div class="sidewalk"></div>
-
-      <!-- Zebra crossing: vertical stripes spanning road height, under TL post -->
-      <!-- Positioned by JS after scene width is known -->
       <div id="zebraCrossing" class="zebra-crossing"></div>
 
       <div class="road">
@@ -322,14 +368,21 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
       <div class="speed-fx" id="sfx1" style="bottom:75px;right:155px;width:50px;"></div>
       <div class="speed-fx" id="sfx2" style="bottom:88px;right:180px;width:35px;"></div>
       <div class="speed-fx" id="sfx3" style="bottom:30px;right:155px;width:45px;"></div>
-      <div class="speed-fx" id="sfx4" style="bottom:42px;right:175px;width:30px;"></div>
+      <div class="speed-fx" id="sfx4" style="bottom:48px;right:175px;width:30px;"></div>
 
-      <div id="creatureLayer" style="position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;"></div>
+      <!-- Air vehicles layer (flies above road) -->
+      <div class="air-layer" id="airLayer" style="bottom:110px;height:80px;"></div>
 
-      <!-- Pedestrian layer: absolute, full scene size so peds can walk top→bottom -->
+      <!-- War creature background -->
+      <div id="creatureLayer" style="position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden;"></div>
+
+      <!-- Pedestrian layer -->
       <div id="pedLayer" style="position:absolute;inset:0;pointer-events:none;z-index:11;overflow:hidden;"></div>
 
-      <!-- 2 vehicle lanes -->
+      <!-- Enforcer layer -->
+      <div id="enforcerLayer" style="position:absolute;inset:0;pointer-events:none;z-index:14;overflow:hidden;"></div>
+
+      <!-- Vehicle lanes -->
       <div class="car-lane back"  id="laneBack"></div>
       <div class="car-lane front" id="laneFront"></div>
     </div>
@@ -337,18 +390,18 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 
   <!-- RIGHT: Controls -->
   <div class="pixel-box controls-panel">
-    <div class="panel-title">SYSTEM CONTROLS</div>
+    <div class="panel-title">COMMAND CENTER</div>
     <div class="ctrl-body">
-      <button class="pixel-btn btn-start" onclick="sendCommand(1)"><span class="btn-icon">▶</span> START SYSTEM</button>
-      <button class="pixel-btn btn-stop"  onclick="sendCommand(0)"><span class="btn-icon">■</span> STOP SYSTEM</button>
-      <button class="pixel-btn btn-blink" onclick="sendCommand(2)"><span class="btn-icon">⚡</span> BLINK MODE</button>
+      <button class="pixel-btn btn-start" onclick="sendCommand(1)"><span class="btn-icon">▶</span> ENGAGE</button>
+      <button class="pixel-btn btn-stop"  onclick="sendCommand(0)"><span class="btn-icon">■</span> HALT ALL</button>
+      <button class="pixel-btn btn-blink" onclick="sendCommand(2)"><span class="btn-icon">⚡</span> ALERT MODE</button>
       <div class="mode-indicator">
-        <div class="mode-row"><span class="mode-key">[ 0 ] OFF</span><span class="mode-dot" id="m0">◉</span></div>
+        <div class="mode-row"><span class="mode-key">[ 0 ] HALT</span><span class="mode-dot" id="m0">◉</span></div>
         <div class="mode-row"><span class="mode-key">[ 1 ] NORMAL</span><span class="mode-dot" id="m1">○</span></div>
-        <div class="mode-row"><span class="mode-key">[ 2 ] BLINK</span><span class="mode-dot" id="m2">○</span></div>
+        <div class="mode-row"><span class="mode-key">[ 2 ] ALERT</span><span class="mode-dot" id="m2">○</span></div>
       </div>
       <div class="log-section">
-        <div class="log-title">📟 EVENT LOG</div>
+        <div class="log-title">📻 FIELD REPORT</div>
         <div class="log-box" id="eventLog"></div>
       </div>
     </div>
@@ -356,7 +409,7 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
 
   <!-- GRAPH -->
   <div class="pixel-box graph-panel">
-    <div class="panel-title">📊 TRAFFIC ANALYTICS</div>
+    <div class="panel-title">📊 COMBAT ANALYTICS</div>
     <div class="graph-body">
       <div class="chart-wrap" style="height:160px;"><canvas id="lineChart"></canvas></div>
       <div class="chart-wrap" style="height:160px;max-width:160px;"><canvas id="donutChart"></canvas></div>
@@ -368,9 +421,9 @@ main{position:relative;z-index:10;display:grid;grid-template-columns:220px 1fr 2
     <div class="pixel-box metric-card green-card"><div class="mc-title">GREEN PHASES</div><div class="mc-val" id="m-green">0</div></div>
     <div class="pixel-box metric-card yellow-card"><div class="mc-title">YELLOW PHASES</div><div class="mc-val" id="m-yellow">0</div></div>
     <div class="pixel-box metric-card red-card"><div class="mc-title">RED PHASES</div><div class="mc-val" id="m-red">0</div></div>
-    <div class="pixel-box metric-card blue-card"><div class="mc-title">VEHICLES PASSED</div><div class="mc-val" id="m-vehicles">0</div></div>
-    <div class="pixel-box metric-card pink-card"><div class="mc-title">TOTAL EVENTS</div><div class="mc-val" id="m-total">0</div></div>
-    <div class="pixel-box metric-card orange-card"><div class="mc-title">AVG WAIT (SEC)</div><div class="mc-val" id="m-avg">0</div></div>
+    <div class="pixel-box metric-card blue-card"><div class="mc-title">UNITS PASSED</div><div class="mc-val" id="m-vehicles">0</div></div>
+    <div class="pixel-box metric-card pink-card"><div class="mc-title">VIOLATIONS</div><div class="mc-val" id="m-violations">0</div></div>
+    <div class="pixel-box metric-card orange-card"><div class="mc-title">TICKETS ISSUED</div><div class="mc-val" id="m-tickets">0</div></div>
   </div>
 </main>
 
@@ -399,22 +452,24 @@ function startAmbient(){
   const buf=ctx.createBuffer(1,len,rate),d=buf.getChannelData(0);
   let last=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;last=(last+.02*w)/1.02;d[i]=last*4;}
   ambientSrc=ctx.createBufferSource();ambientSrc.buffer=buf;ambientSrc.loop=true;
-  ambientGain=ctx.createGain();ambientGain.gain.value=soundEnabled?.05:0;
-  const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=140;
+  ambientGain=ctx.createGain();ambientGain.gain.value=soundEnabled?.04:0;
+  const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=120;
   ambientSrc.connect(lp);lp.connect(ambientGain);ambientGain.connect(ctx.destination);
   ambientSrc.start();scheduleHorn();
 }
-function scheduleHorn(){clearTimeout(hornTimer);if(!soundEnabled)return;hornTimer=setTimeout(()=>{if(soundEnabled)playHorn(.05+Math.random()*.07);scheduleHorn();},(4+Math.random()*9)*1000);}
-function playHorn(vol=.12){
+function scheduleHorn(){clearTimeout(hornTimer);if(!soundEnabled)return;hornTimer=setTimeout(()=>{if(soundEnabled)playHorn(.04+Math.random()*.06);scheduleHorn();},(5+Math.random()*10)*1000);}
+function playHorn(vol=.1){
   if(!soundEnabled)return;const ctx=getCtx();
-  const cfgs=[{freqs:[350,440],dur:.18},{freqs:[220,275],dur:.38},{freqs:[480,600],dur:.12}];
+  const cfgs=[{freqs:[350,440],dur:.18},{freqs:[220,275],dur:.38},{freqs:[480,600],dur:.12},{freqs:[180,220,260],dur:.5}];
   const cfg=cfgs[Math.floor(Math.random()*cfgs.length)];
   cfg.freqs.forEach((f,i)=>{const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=f;const g=ctx.createGain();const t=ctx.currentTime+i*.01;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.025);g.gain.setValueAtTime(vol,t+cfg.dur-.04);g.gain.linearRampToValueAtTime(0,t+cfg.dur);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+cfg.dur+.05);});
 }
 function playBrake(){if(!soundEnabled)return;const ctx=getCtx();const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(850,ctx.currentTime);o.frequency.linearRampToValueAtTime(380,ctx.currentTime+.22);const g=ctx.createGain();g.gain.setValueAtTime(.06,ctx.currentTime);g.gain.linearRampToValueAtTime(0,ctx.currentTime+.22);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.25);}
 function playPassBy(){if(!soundEnabled)return;const ctx=getCtx(),len=ctx.sampleRate*.55;const buf=ctx.createBuffer(1,len,ctx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*.25;const src=ctx.createBufferSource();src.buffer=buf;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=280;bp.Q.value=.9;const g=ctx.createGain();g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(.07,ctx.currentTime+.12);g.gain.setValueAtTime(.07,ctx.currentTime+.28);g.gain.linearRampToValueAtTime(0,ctx.currentTime+.55);src.connect(bp);bp.connect(g);g.connect(ctx.destination);src.start();src.stop(ctx.currentTime+.6);}
-function playLightChime(state){if(!soundEnabled)return;const ctx=getCtx();const seqs={GREEN:[{f:523,t:0},{f:659,t:.1},{f:784,t:.2}],YELLOW:[{f:440,t:0},{f:392,t:.12}],RED:[{f:330,t:0},{f:262,t:.12}]};(seqs[state]||[]).forEach(({f,t})=>{const o=ctx.createOscillator();o.type='sine';o.frequency.value=f;const g=ctx.createGain();const ct=ctx.currentTime+t;g.gain.setValueAtTime(0,ct);g.gain.linearRampToValueAtTime(.09,ct+.01);g.gain.exponentialRampToValueAtTime(.001,ct+.3);o.connect(g);g.connect(ctx.destination);o.start(ct);o.stop(ct+.35);});}
-function playPedBeep(){if(!soundEnabled)return;const ctx=getCtx();const o=ctx.createOscillator();o.type='square';o.frequency.value=880;const g=ctx.createGain();g.gain.setValueAtTime(.045,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.08);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.09);}
+function playLightChime(state){if(!soundEnabled)return;const ctx=getCtx();const seqs={GREEN:[{f:523,t:0},{f:659,t:.1},{f:784,t:.2}],YELLOW:[{f:440,t:0},{f:392,t:.12}],RED:[{f:330,t:0},{f:262,t:.12}]};(seqs[state]||[]).forEach(({f,t})=>{const o=ctx.createOscillator();o.type='sine';o.frequency.value=f;const g=ctx.createGain();const ct=ctx.currentTime+t;g.gain.setValueAtTime(0,ct);g.gain.linearRampToValueAtTime(.08,ct+.01);g.gain.exponentialRampToValueAtTime(.001,ct+.28);o.connect(g);g.connect(ctx.destination);o.start(ct);o.stop(ct+.32);});}
+function playPedBeep(){if(!soundEnabled)return;const ctx=getCtx();const o=ctx.createOscillator();o.type='square';o.frequency.value=880;const g=ctx.createGain();g.gain.setValueAtTime(.04,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.08);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.09);}
+function playWhistle(){if(!soundEnabled)return;const ctx=getCtx();const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(1200,ctx.currentTime);o.frequency.linearRampToValueAtTime(900,ctx.currentTime+.15);const g=ctx.createGain();g.gain.setValueAtTime(.1,ctx.currentTime);g.gain.linearRampToValueAtTime(0,ctx.currentTime+.2);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.22);}
+function playExplosion(){if(!soundEnabled)return;const ctx=getCtx(),len=ctx.sampleRate*.3;const buf=ctx.createBuffer(1,len,ctx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/len*6);const src=ctx.createBufferSource();src.buffer=buf;const g=ctx.createGain();g.gain.setValueAtTime(.15,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.3);src.connect(g);g.connect(ctx.destination);src.start();src.stop(ctx.currentTime+.35);}
 
 /* ═══════════════════════════════════════════
    STATE
@@ -422,239 +477,571 @@ function playPedBeep(){if(!soundEnabled)return;const ctx=getCtx();const o=ctx.cr
 let db=null,currentState='OFF',currentMode=0;
 let startTime=Date.now(),cycleCount=0,score=0,coins=0,vehiclesPassed=0,totalWaitTime=0,waitEvents=0;
 let metrics={GREEN:0,YELLOW:0,RED:0,total:0};
+let totalViolations=0,totalTickets=0;
 const MAX_PTS=20;let lineData={labels:[],green:[],yellow:[],red:[]};
 
 /* ═══════════════════════════════════════════
    SCENE INIT
 ═══════════════════════════════════════════ */
-function initStars(){const c=document.getElementById('stars');for(let i=0;i<60;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()<.3?2:1;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*55}%;left:${Math.random()*100}%;--d:${(1.5+Math.random()*3).toFixed(1)}s`;c.appendChild(s);}}
-function initBuildings(){const c=document.getElementById('buildings');const cols=['#0a0a20','#080818','#0c0c25','#060615'];const ws=[30,40,35,50,28,45,38,55,32,42],hs=[80,110,70,120,90,100,75,115,85,95];for(let i=0;i<14;i++){const b=document.createElement('div');b.className='building';b.style.cssText=`width:${ws[i%ws.length]+(Math.random()*8|0)}px;height:${hs[i%hs.length]+(Math.random()*20|0)}px;background:${cols[i%cols.length]}`;c.appendChild(b);}const wl=document.getElementById('winLights');for(let i=0;i<40;i++){const d=document.createElement('div');d.style.cssText=`position:absolute;width:3px;height:3px;left:${Math.random()*90}%;bottom:${5+Math.random()*85}%;background:rgba(${Math.random()<.3?'100,200,255':'255,240,180'},${(.3+Math.random()*.5).toFixed(2)});animation:twinkle ${(2+Math.random()*4).toFixed(1)}s step-end infinite;animation-delay:${(Math.random()*4).toFixed(1)}s`;wl.appendChild(d);}}
-
-/*
-  ═══════════════════════════════════════════
-  ZEBRA CROSSING LAYOUT (VERTICAL)
-  ═══════════════════════════════════════════
-  The TL post is positioned right:130px (CSS).
-  Scene road is 100px tall at the bottom.
-  The zebra sits right below the pole base,
-  spanning the full road height (100px),
-  vertically striped (top→bottom) so it looks
-  like a real crosswalk when viewed from the side.
-  Cars must stop BEFORE reaching zebraX.
-*/
-let zebraX = 0; // left edge of zebra (in scene coords)
-const ZEBRA_W = 44; // width of the crossing zone
-
+function initStars(){const c=document.getElementById('stars');for(let i=0;i<40;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()<.3?2:1;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*55}%;left:${Math.random()*100}%;--d:${(1.5+Math.random()*3).toFixed(1)}s`;c.appendChild(s);}
+  // Smoke particles (war ambience)
+  for(let i=0;i<8;i++){const s=document.createElement('div');s.style.cssText=`position:absolute;width:${6+Math.random()*10}px;height:${6+Math.random()*10}px;border-radius:50%;background:rgba(80,80,60,${(.1+Math.random()*.15).toFixed(2)});left:${Math.random()*100}%;top:${Math.random()*40}%;animation:twinkle ${(3+Math.random()*5).toFixed(1)}s step-end infinite;animation-delay:${(Math.random()*3).toFixed(1)}s`;c.appendChild(s);}
+}
+function initBuildings(){
+  const c=document.getElementById('buildings');
+  const cols=['#1a1a0a','#151508','#1e1e0e','#121208'];
+  const ws=[30,40,35,50,28,45,38,55,32,42],hs=[80,110,70,120,90,100,75,115,85,95];
+  for(let i=0;i<14;i++){
+    const b=document.createElement('div');b.className='building';
+    const w=ws[i%ws.length]+(Math.random()*8|0),h=hs[i%hs.length]+(Math.random()*20|0);
+    // Some buildings are damaged (war theme)
+    const damaged=Math.random()<.35;
+    b.style.cssText=`width:${w}px;height:${h}px;background:${cols[i%cols.length]}`;
+    if(damaged){
+      b.style.clipPath=`polygon(0 100%,0 ${10+Math.random()*20}%,${15+Math.random()*15}% 0%,${50+Math.random()*20}% ${5+Math.random()*15}%,100% 0%,100% 100%)`;
+    }
+    c.appendChild(b);
+  }
+  // Explosion fire spots on some buildings
+  const wl=document.getElementById('winLights');
+  for(let i=0;i<30;i++){
+    const d=document.createElement('div');
+    const isFire=Math.random()<.15;
+    d.style.cssText=`position:absolute;width:${isFire?4:3}px;height:${isFire?4:3}px;left:${Math.random()*90}%;bottom:${5+Math.random()*85}%;background:rgba(${isFire?'255,100,0':'255,230,120'},${(.25+Math.random()*.45).toFixed(2)});animation:twinkle ${(isFire?0.3+Math.random()*.4:2+Math.random()*4).toFixed(1)}s step-end infinite;animation-delay:${(Math.random()*2).toFixed(1)}s`;
+    wl.appendChild(d);
+  }
+}
+let zebraX=0;const ZEBRA_W=44;
 function initZebra(){
-  const scene = document.getElementById('scene');
-  const W = scene.offsetWidth || 800;
-  // TL pole right edge is 130px from scene right, pole width ~4px, so center ≈ W-132
-  const poleCenterX = W - 132;
-  zebraX = poleCenterX - ZEBRA_W / 2;
-
-  const el = document.getElementById('zebraCrossing');
-  el.style.left  = zebraX + 'px';
-  el.style.width = ZEBRA_W + 'px';
-  // road is 100px tall, sits at bottom of scene
-  el.style.bottom = '0px';
-  el.style.height = '100px';
+  const scene=document.getElementById('scene'),W=scene.offsetWidth||800;
+  const poleCenterX=W-132;zebraX=poleCenterX-ZEBRA_W/2;
+  const el=document.getElementById('zebraCrossing');
+  el.style.left=zebraX+'px';el.style.width=ZEBRA_W+'px';el.style.bottom='0px';el.style.height='100px';
 }
 
 /* ═══════════════════════════════════════════
-   VEHICLES — Realistic queue stop logic
-   Cars stop BEFORE the zebra (zebraX - gap),
-   NOT at the TL post. Cars behind queue up.
+   VEHICLE DEFINITIONS — WAR THEMED
 ═══════════════════════════════════════════ */
 const VDEFS=[
-  {type:'car',cls:'car-blue',  w:36,lane:'front',gap:5},
-  {type:'car',cls:'car-red',   w:36,lane:'front',gap:5},
-  {type:'car',cls:'car-green', w:36,lane:'front',gap:5},
-  {type:'car',cls:'car-yellow',w:36,lane:'front',gap:5},
-  {type:'car',cls:'car-pink',  w:36,lane:'front',gap:5},
-  {type:'car',cls:'car-white', w:36,lane:'front',gap:5},
-  {type:'car',cls:'car-blue',  w:36,lane:'back', gap:5},
-  {type:'car',cls:'car-red',   w:36,lane:'back', gap:5},
-  {type:'car',cls:'car-white', w:36,lane:'back', gap:5},
-  {type:'truck',cls:'',        w:56,lane:'front',gap:6},
-  {type:'bus',  cls:'',        w:64,lane:'front',gap:6},
+  // Ground military vehicles
+  {type:'tank',   cls:'',        w:50,lane:'front',gap:6},
+  {type:'jeep',   cls:'',        w:40,lane:'front',gap:5},
+  {type:'jeep',   cls:'',        w:40,lane:'back', gap:5},
+  {type:'truck',  cls:'',        w:56,lane:'front',gap:6},
+  {type:'moto',   cls:'',        w:24,lane:'front',gap:4},
+  {type:'moto',   cls:'',        w:24,lane:'back', gap:4},
+  {type:'car',    cls:'car-olive', w:36,lane:'front',gap:5},
+  {type:'car',    cls:'car-khaki', w:36,lane:'front',gap:5},
+  {type:'car',    cls:'car-sand',  w:36,lane:'back', gap:5},
+  {type:'car',    cls:'car-darkgr',w:36,lane:'back', gap:5},
+  {type:'bus',    cls:'',        w:64,lane:'front',gap:6},
 ];
-let frontV=[],backV=[],lastSF=0,lastSB=0,siF=1600,siB=2200,brakeCD=0;
 
-// Stop line: vehicles stop just before the zebra crossing
-function getStopX(vw){ return zebraX - vw - 6; }
-
+/* ── VEHICLE FACTORY ── */
 function makeVehicleEl(def){
   let el=document.createElement('div');
-  if(def.type==='car'){el.className=`pcar ${def.cls}`;el.innerHTML=`<div class="wheel-r"></div><div class="wheel-f"></div><div class="roof"></div><div class="body"></div><div class="headlight"></div><div class="taillight"></div>`;}
-  else if(def.type==='truck'){el.className='ptruck';el.innerHTML=`<div class="truck-body"></div><div class="truck-cab"></div><div class="truck-wheel-r"></div><div class="truck-wheel-f"></div><div class="truck-headlight"></div>`;}
-  else{el.className='pbus';el.innerHTML=`<div class="bus-body"></div><div class="bus-windows"></div><div class="bus-wheel-r"></div><div class="bus-wheel-f"></div><div class="bus-headlight"></div>`;}
+  switch(def.type){
+    case 'tank':
+      el.className='ptank';
+      el.innerHTML=`<div class="tank-base"></div><div class="tank-turret"></div><div class="tank-barrel"></div><div class="tank-track-f"></div><div class="tank-track-r"></div><div class="tank-star"></div>`;
+      break;
+    case 'jeep':
+      el.className='pjeep';
+      el.innerHTML=`<div class="jeep-body"></div><div class="jeep-cab"></div><div class="jeep-wheel-f"></div><div class="jeep-wheel-r"></div><div class="jeep-gun"></div><div class="jeep-headlight"></div>`;
+      break;
+    case 'moto':
+      el.className='pmoto';
+      el.innerHTML=`<div class="moto-body"></div><div class="moto-wheel-f"></div><div class="moto-wheel-r"></div><div class="moto-rider"></div><div class="moto-headlight"></div>`;
+      break;
+    case 'truck':
+      el.className='ptruck';
+      el.innerHTML=`<div class="truck-body"></div><div class="truck-cab"></div><div class="truck-wheel-r"></div><div class="truck-wheel-f"></div><div class="truck-headlight"></div>`;
+      break;
+    case 'bus':
+      el.className='pbus';
+      el.innerHTML=`<div class="bus-body"></div><div class="bus-windows"></div><div class="bus-wheel-r"></div><div class="bus-wheel-f"></div><div class="bus-headlight"></div>`;
+      break;
+    default:
+      el.className=`pcar ${def.cls||''}`;
+      el.innerHTML=`<div class="wheel-r"></div><div class="wheel-f"></div><div class="roof"></div><div class="body"></div><div class="headlight"></div><div class="taillight"></div>`;
+  }
   return el;
 }
+
+/* ═══════════════════════════════════════════
+   VEHICLE LANE SYSTEM
+   ── 2 lanes: front (bottom) and back (top)
+   ── Cars must NOT pass through same lane
+   ── If blocked → lane change to other lane
+   ── Violators stop; others go around them
+═══════════════════════════════════════════ */
+let frontV=[],backV=[],lastSF=0,lastSB=0,siF=1400,siB=2000,brakeCD=0;
+let totalVehiclesEver=0;
+
+function getStopX(vw){return zebraX-vw-6;}
+
 function spawnVehicle(laneId){
   const defs=VDEFS.filter(v=>v.lane===laneId);
   const def=defs[Math.floor(Math.random()*defs.length)];
   const el=makeVehicleEl(def);
   const lane=document.getElementById(laneId==='front'?'laneFront':'laneBack');
-  const spd=laneId==='front'?1.8+Math.random()*1.5:1.2+Math.random()*1.0;
+  const spd=laneId==='front'?1.5+Math.random()*1.4:1.1+Math.random()*.9;
+  const willViolate=Math.random()<.18; // 18% chance of violation (runs red)
   el.style.left=(-def.w-20)+'px';
   lane.appendChild(el);
-  const v={el,x:-def.w-20,speed:spd,maxSpeed:spd,w:def.w,gap:def.gap,prevSpd:spd};
-  if(laneId==='front')frontV.push(v); else backV.push(v);
+  const v={el,x:-def.w-20,speed:spd,maxSpeed:spd,w:def.w,gap:def.gap,prevSpd:spd,
+            lane:laneId,type:def.type,
+            willViolate, // this car MAY run a red light
+            hasViolated:false, // did it actually violate?
+            isStopped:false,   // stopped by enforcer after violation
+            isLaneChanging:false, // currently overtaking
+            laneChangeTimer:0,
+            ticketed:false,
+            id:++totalVehiclesEver};
+  if(laneId==='front')frontV.push(v);else backV.push(v);
 }
-function processLane(vehicles){
+
+/* ── LANE CHANGE: move a car to the other lane ── */
+function triggerLaneChange(v){
+  // Can only lane-change if the other lane has space
+  const otherLane = v.lane==='front' ? backV : frontV;
+  const targetLaneId = v.lane==='front'?'back':'front';
+  const targetLaneEl = document.getElementById(targetLaneId==='front'?'laneFront':'laneBack');
+  // Check space at current x position in other lane
+  const blocked = otherLane.some(o=>Math.abs(o.x-v.x)<v.w+10);
+  if(blocked) return false;
+  // Move DOM element
+  v.el.remove();
+  targetLaneEl.appendChild(v.el);
+  // Remove from old array, add to new
+  const oldArr = v.lane==='front'?frontV:backV;
+  const idx=oldArr.indexOf(v);
+  if(idx>-1) oldArr.splice(idx,1);
+  v.lane=targetLaneId;
+  if(targetLaneId==='front') frontV.push(v);else backV.push(v);
+  v.isLaneChanging=true;
+  v.laneChangeTimer=40; // 40 frames in new lane before can switch back
+  return true;
+}
+
+/* ── PROCESS A SINGLE LANE ── */
+function processLane(vehicles, laneId){
   const scene=document.getElementById('scene'),W=(scene?scene.offsetWidth:800);
   const isGo   = currentState==='GREEN';
   const isSlow = currentState==='YELLOW';
-  const isStop = !isGo && !isSlow;
+  const isStop = !isGo&&!isSlow;
   const byX=[...vehicles].sort((a,b)=>b.x-a.x);
 
   for(let i=vehicles.length-1;i>=0;i--){
     const v=vehicles[i];
-    const tlStop=getStopX(v.w); // this car's TL stop line (front bumper position)
+    if(v.laneChangeTimer>0) v.laneChangeTimer--;
 
-    // Find the vehicle directly ahead
+    const tlStop=getStopX(v.w);
+
+    // Find vehicle directly ahead in SAME lane
     let aheadV=null;
-    for(const other of byX){if(other!==v&&other.x>v.x){aheadV=other;break;}}
-
-    // Personal stop target = min(TL stop line, gap behind car ahead)
-    let myStop=tlStop;
-    if(aheadV){const qs=aheadV.x-v.w-v.gap;if(qs<myStop)myStop=qs;}
-
-    let spd=v.maxSpeed;
-    if(isStop){
-      // During RED: drive at full speed until near personal stop, then decel
-      if(v.x>=myStop){spd=0;}
-      else{const dist=myStop-v.x;if(dist<65)spd=v.maxSpeed*(dist/65);/* else full speed */}
-    } else if(isSlow){
-      if(v.x>=myStop-8)spd=0;
-      else spd=v.maxSpeed*.35;
-    } else {
-      // GREEN: follow car ahead with gap
-      if(aheadV){const gap=aheadV.x-v.x;if(gap<v.w+v.gap+2)spd=0;else if(gap<v.w+35)spd=Math.min(spd,aheadV.maxSpeed*.65);}
+    for(const other of byX){
+      if(other!==v && other.x>v.x && other.lane===v.lane){aheadV=other;break;}
     }
 
-    if(v.prevSpd>1.0&&spd<.15&&brakeCD<=0){playBrake();brakeCD=55;}
+    let myStop=tlStop;
+    if(aheadV){
+      const qs=aheadV.x-v.w-v.gap;
+      if(qs<myStop) myStop=qs;
+    }
+
+    let spd=v.maxSpeed;
+
+    // ── STOPPED BY ENFORCER ──
+    if(v.isStopped){
+      spd=0;
+      // After 120 frames, car resumes (enforcer done)
+      v.stopTimer=(v.stopTimer||0)+1;
+      if(v.stopTimer>120){v.isStopped=false;v.stopTimer=0;}
+      v.el.style.left=v.x+'px';
+
+      // Vehicles behind a stopped car should try lane change
+      if(aheadV && aheadV.isStopped){
+        if(v.laneChangeTimer<=0) triggerLaneChange(v);
+      }
+      // Set taillight
+      const tail=v.el.querySelector('.taillight');if(tail)tail.classList.add('brake');
+      continue;
+    }
+
+    // ── TRAFFIC LIGHT LOGIC ──
+    if(isStop){
+      const nearLight = v.x >= tlStop-65 && v.x < tlStop+5;
+      if(v.willViolate && !v.hasViolated && nearLight && currentState==='RED'){
+        // Violator runs the red — goes through
+        spd=v.maxSpeed*0.8;
+        v.hasViolated=true;
+        totalViolations++;
+        document.getElementById('m-violations').textContent=totalViolations;
+        addLog(`⚠️ UNIT #${v.id} VIOLATED RED`,  'orange');
+        // Trigger enforcer response
+        scheduleEnforcer(v);
+      } else if(!v.hasViolated){
+        if(v.x>=myStop) spd=0;
+        else {const dist=myStop-v.x;if(dist<65)spd=v.maxSpeed*(dist/65);}
+      }
+    } else if(isSlow){
+      if(!v.hasViolated){
+        if(v.x>=myStop-8) spd=0;
+        else spd=v.maxSpeed*.35;
+      }
+    } else {
+      // GREEN — car-following
+      if(aheadV){
+        const gap=aheadV.x-v.x;
+        if(gap<v.w+v.gap+2){
+          // Car is too close to the one ahead — try lane change instead of stopping
+          if(v.laneChangeTimer<=0){
+            const changed=triggerLaneChange(v);
+            if(!changed) spd=0; // no space to change, must wait
+            else spd=v.maxSpeed; // successfully changed
+          } else {
+            spd=0;
+          }
+        } else if(gap<v.w+35){
+          spd=Math.min(spd,aheadV.maxSpeed*.65);
+        }
+      }
+    }
+
+    // Brake squeal
+    if(v.prevSpd>1.0&&spd<.15&&brakeCD<=0){playBrake();brakeCD=50;}
     v.prevSpd=spd;if(brakeCD>0)brakeCD--;
 
     v.x+=spd;
-    if(isStop||isSlow)v.x=Math.min(v.x,myStop);
+    if((isStop||isSlow)&&!v.hasViolated) v.x=Math.min(v.x,myStop);
     v.el.style.left=v.x+'px';
 
-    v.el.querySelectorAll('[class*="wheel"]').forEach(w=>{w.className=w.className.replace(' wheel-spin','').replace(' wheel-slow','');if(spd>1.0)w.className+=' wheel-spin';else if(spd>.05)w.className+=' wheel-slow';});
+    // Wheel animations
+    v.el.querySelectorAll('[class*="wheel"],[class*="track"]').forEach(w=>{
+      w.className=w.className.replace(' wheel-spin','').replace(' wheel-slow','');
+      if(spd>1.0)w.className+=' wheel-spin';else if(spd>.05)w.className+=' wheel-slow';
+    });
     const tail=v.el.querySelector('.taillight');if(tail)tail.classList.toggle('brake',spd<.3&&v.x>60);
 
+    // Off screen
     if(v.x>W+v.w+30){
-      vehiclesPassed++;score+=100;coins++;
+      vehiclesPassed++;score+=v.hasViolated?50:100;coins++;
       document.getElementById('m-vehicles').textContent=vehiclesPassed;
       document.getElementById('coinVal').textContent=String(coins).padStart(2,'0');
-      updateScore();showScorePopup('+100');playPassBy();
+      updateScore();showScorePopup(v.hasViolated?'+50':'+100');if(Math.random()<.4)playPassBy();
       v.el.remove();vehicles.splice(i,1);
     }
   }
 }
+
 function updateAllVehicles(){
   const now=Date.now();
-  if(now-lastSF>siF&&currentMode!==0&&frontV.length<6){lastSF=now;siF=1100+Math.random()*1400;spawnVehicle('front');}
-  if(now-lastSB>siB&&currentMode!==0&&backV.length<4){lastSB=now;siB=1700+Math.random()*1800;spawnVehicle('back');}
-  processLane(frontV);processLane(backV);
+  if(now-lastSF>siF&&currentMode!==0&&frontV.length<6){lastSF=now;siF=1000+Math.random()*1300;spawnVehicle('front');}
+  if(now-lastSB>siB&&currentMode!==0&&backV.length<4){lastSB=now;siB=1500+Math.random()*1700;spawnVehicle('back');}
+  processLane(frontV,'front');processLane(backV,'back');
   const go=currentState==='GREEN';
   ['sfx1','sfx2','sfx3','sfx4'].forEach(id=>document.getElementById(id)?.classList.toggle('show',go&&frontV.length>0));
 }
-function showScorePopup(txt){const s=document.getElementById('scene'),p=document.createElement('div');p.className='score-popup';p.textContent=txt;p.style.cssText=`left:${s.offsetWidth-160}px;top:20px`;s.appendChild(p);setTimeout(()=>p.remove(),1200);}
+
+function showScorePopup(txt){
+  const s=document.getElementById('scene'),p=document.createElement('div');
+  p.className='score-popup';p.textContent=txt;
+  p.style.cssText=`left:${s.offsetWidth-160}px;top:20px`;
+  s.appendChild(p);setTimeout(()=>p.remove(),1200);
+}
+function showTicketPopup(x,lane){
+  const s=document.getElementById('scene'),p=document.createElement('div');
+  p.className='ticket-popup';p.textContent='🎫 TICKET!';
+  const sceneH=s.offsetHeight||310;
+  const y=lane==='front'?sceneH-50:sceneH-90;
+  p.style.cssText=`left:${Math.min(x+10,s.offsetWidth-70)}px;top:${y}px`;
+  s.appendChild(p);setTimeout(()=>p.remove(),2000);
+}
 
 /* ═══════════════════════════════════════════
-   PEDESTRIANS — Walk VERTICALLY across road
-   ═══════════════════════════════════════════
-   The scene is 310px tall. The road is the
-   bottom 100px. The sidewalk is just above road.
-   Pedestrians spawn at the TOP of the road area
-   (y = scene height - road height = 210px from top,
-   or equivalently bottom:100px) and walk DOWN
-   to the bottom of the scene (bottom:0).
-   They are positioned at zebraX horizontally,
-   staggered slightly so multiple peds don't overlap.
+   TRAFFIC ENFORCER SYSTEM
 ═══════════════════════════════════════════ */
-let peds=[], lastPedSpawn=0, pedBeepT=0;
-const PED_COLORS=['#3399ff','#ff6633','#cc33ff','#33cc33','#ffaa00','#ff3399','#ffffff','#ff9900'];
-const SKIN_COLORS=['#ffddaa','#f5c289','#c68642','#8d5524','#ffd1a3'];
+const ENFORCERS = [];
+let enfIdCounter=0;
 
-function spawnPed(){
-  const scene  = document.getElementById('scene');
-  const sceneH = scene.offsetHeight || 310;
-  const ROAD_H = 100; // road is 100px tall
-
-  // Ped walks from top of road → bottom of road (top-to-bottom = increasing y)
-  const goDown = Math.random() > 0.5; // direction: top→bottom or bottom→top
-
-  // Start Y: top edge of road = sceneH - ROAD_H; bottom edge = sceneH
-  const startY = goDown ? (sceneH - ROAD_H - 12) : (sceneH - 6);
-  const speed  = 0.5 + Math.random() * 0.45;
-
-  // Stagger X slightly within zebra width so peds don't all stack
-  const xOffset = Math.floor(Math.random() * (ZEBRA_W - 8));
-  const pedX    = zebraX + xOffset;
-
-  const skin  = SKIN_COLORS[Math.floor(Math.random() * SKIN_COLORS.length)];
-  const shirt = PED_COLORS[Math.floor(Math.random() * PED_COLORS.length)];
-
-  const el = document.createElement('div');
-  el.className = 'pedestrian';
-  el.innerHTML = `
-    <div class="ped-head" style="background:${skin};border:1px solid #7a4a1e;"></div>
-    <div class="ped-body" style="background:${shirt};border:1px solid rgba(0,0,0,.5);"></div>
-    <div class="ped-leg-l" style="height:4px;background:#333;"></div>
-    <div class="ped-leg-r" style="height:3px;background:#333;"></div>
-  `;
-  el.style.left = pedX + 'px';
-  el.style.top  = startY + 'px';
-
-  document.getElementById('pedLayer').appendChild(el);
-  peds.push({ el, y: startY, x: pedX, speed: goDown ? speed : -speed, goDown, legT: 0, sceneH, ROAD_H });
-  playPedBeep();
+function scheduleEnforcer(violatorV){
+  // Spawn enforcer at approx. violator position to issue ticket
+  setTimeout(()=>{
+    if(!violatorV || violatorV.x>=(document.getElementById('scene')?.offsetWidth||800)) return;
+    spawnEnforcer(violatorV);
+  }, 400);
 }
 
-function updatePeds(){
-  const canWalk = currentState === 'RED';
-  const now = Date.now();
+function spawnEnforcer(targetV){
+  const layer=document.getElementById('enforcerLayer');
+  const scene=document.getElementById('scene');
+  const sceneH=scene.offsetHeight||310;
 
-  if(canWalk && now - lastPedSpawn > 1400 && peds.length < 5){
-    lastPedSpawn = now; spawnPed();
+  const el=document.createElement('div');el.className='enforcer';
+  // Enforcer starts at road edge and moves to vehicle position
+  const startX=zebraX+5;
+  const targetX=Math.min(targetV.x+targetV.w/2, zebraX+60);
+  const laneY = targetV.lane==='front' ? sceneH-35 : sceneH-70;
+  el.innerHTML=`<div class="enf-hat"></div><div class="enf-head"></div><div class="enf-body"></div><div class="enf-badge"></div><div class="enf-legs"></div><div class="enf-arm"></div>`;
+  el.style.left=startX+'px';el.style.top=laneY+'px';
+  layer.appendChild(el);
+
+  const enf={el,x:startX,targetX,targetV,state:'approaching',timer:0,id:++enfIdCounter};
+  ENFORCERS.push(enf);
+  playWhistle();
+  totalTickets++;
+  document.getElementById('m-tickets').textContent=totalTickets;
+  document.getElementById('ticketCount').textContent=totalTickets;
+  document.getElementById('violCount').textContent=totalViolations;
+}
+
+function spawnTicketSlip(enf){
+  const layer=document.getElementById('enforcerLayer');
+  const scene=document.getElementById('scene');
+  const el=document.createElement('div');el.className='ticket-slip';
+  el.innerHTML=`<div class="ticket-slip-inner">🎫 CITATION #${enf.id}</div>`;
+  el.style.left=(enf.x-10)+'px';el.style.top=(parseInt(enf.el.style.top)-20)+'px';
+  layer.appendChild(el);
+  // Flash ticket
+  showTicketPopup(enf.x, enf.targetV?.lane||'front');
+  setTimeout(()=>el.remove(),2500);
+}
+
+function updateEnforcers(){
+  for(let i=ENFORCERS.length-1;i>=0;i--){
+    const enf=ENFORCERS[i];
+    enf.timer++;
+
+    if(enf.state==='approaching'){
+      // Move toward target vehicle
+      const dx=enf.targetX-enf.x;
+      if(Math.abs(dx)<2){
+        enf.state='issuing';
+        enf.timer=0;
+        // Stop the violator
+        if(enf.targetV) enf.targetV.isStopped=true;
+        spawnTicketSlip(enf);
+        playWhistle();
+        addLog(`🎫 ENFORCER ISSUED TICKET #${enf.id}`, 'orange');
+      } else {
+        enf.x+=dx*.08;
+        enf.el.style.left=enf.x+'px';
+      }
+    } else if(enf.state==='issuing'){
+      // Enforcer stands there for 90 frames then retreats
+      if(enf.timer>90){enf.state='retreating';}
+    } else {
+      // Retreat back
+      enf.x-=1.2;
+      enf.el.style.left=enf.x+'px';
+      if(enf.x<-20){enf.el.remove();ENFORCERS.splice(i,1);}
+    }
   }
-  if(canWalk){ pedBeepT++; if(pedBeepT % 45 === 0) playPedBeep(); }
-  else { pedBeepT = 0; }
+}
 
-  for(let i = peds.length - 1; i >= 0; i--){
-    const p = peds[i];
-    if(!canWalk){ p.el.remove(); peds.splice(i,1); continue; }
+/* ═══════════════════════════════════════════
+   AIR VEHICLES — follow traffic lights too!
+═══════════════════════════════════════════ */
+const AIR_VEHICLES = [];
+let lastAirSpawn=0;
 
-    p.y += p.speed;
-    p.el.style.top = p.y + 'px';
+function spawnAirVehicle(){
+  const layer=document.getElementById('airLayer');
+  const scene=document.getElementById('scene');
+  const W=scene.offsetWidth||800;
+  const isChopper=Math.random()>.55;
+  const el=document.createElement('div');
+  const spd=isChopper?0.6+Math.random()*.6:1.2+Math.random()*1.0;
+  const willViolate=Math.random()<.12; // air vehicles can also violate
 
-    // Animate legs (alternating heights to simulate walking)
-    p.legT++;
-    const ll = p.el.querySelector('.ped-leg-l');
-    const lr = p.el.querySelector('.ped-leg-r');
-    if(ll && lr){
-      const t = Math.floor(p.legT / 7) % 2;
-      ll.style.height = t ? '5px' : '3px';
-      lr.style.height = t ? '3px' : '5px';
+  if(isChopper){
+    el.className='pchopper';
+    el.innerHTML=`<div class="chop-body"></div><div class="chop-blade"></div><div class="chop-rotor"></div><div class="chop-tail"></div><div class="chop-cockpit"></div>`;
+  } else {
+    el.className='pplane';
+    el.innerHTML=`<div class="plane-body"></div><div class="plane-wing-l"></div><div class="plane-tail"></div><div class="plane-nose"></div><div class="plane-cockpit"></div><div class="plane-bomb"></div>`;
+  }
+  const startX=-(isChopper?44:50)-10;
+  const yOffset=Math.floor(Math.random()*55);
+  el.style.left=startX+'px';el.style.top=yOffset+'px';
+  layer.appendChild(el);
+
+  const av={el,x:startX,spd,maxSpd:spd,type:isChopper?'chopper':'plane',willViolate,hasViolated:false,yTop:yOffset,W,id:++totalVehiclesEver};
+  AIR_VEHICLES.push(av);
+}
+
+function updateAirVehicles(){
+  const now=Date.now();
+  if(now-lastAirSpawn>2200&&AIR_VEHICLES.length<4){lastAirSpawn=now;spawnAirVehicle();}
+
+  const scene=document.getElementById('scene');
+  const W=scene?scene.offsetWidth:800;
+  const isStop=currentState==='RED'||currentState==='BLINK';
+  const isSlow=currentState==='YELLOW';
+
+  for(let i=AIR_VEHICLES.length-1;i>=0;i--){
+    const av=AIR_VEHICLES[i];
+    // Air vehicles have their own stop line in the AIR (~zebraX)
+    const airStopX=zebraX-20;
+    const nearStop=av.x>airStopX-80&&av.x<airStopX+5;
+
+    let spd=av.maxSpd;
+    if(isStop){
+      if(av.willViolate&&!av.hasViolated&&nearStop){
+        spd=av.maxSpd*.7;av.hasViolated=true;
+        totalViolations++;document.getElementById('m-violations').textContent=totalViolations;
+        addLog(`✈️ AIR UNIT #${av.id} VIOLATED AIR SIGNAL`,'orange');
+      } else if(!av.hasViolated){
+        if(av.x>=airStopX) spd=0;
+        else if(nearStop) spd=av.maxSpd*(Math.max(0,airStopX-av.x)/80);
+      }
+    } else if(isSlow){
+      if(!av.hasViolated&&nearStop) spd=av.maxSpd*.4;
     }
 
-    // Remove when they've crossed to the other side
-    const doneDown = p.goDown  && p.y > p.sceneH + 4;
-    const doneUp   = !p.goDown && p.y < p.sceneH - p.ROAD_H - 20;
-    if(doneDown || doneUp){ p.el.remove(); peds.splice(i,1); }
+    // Slight bobbing for chopper
+    if(av.type==='chopper') av.el.style.top=(av.yTop+Math.sin(Date.now()*.003+i)*3)+'px';
+
+    av.x+=spd;
+    av.el.style.left=av.x+'px';
+
+    if(av.x>W+70){
+      vehiclesPassed++;av.el.remove();AIR_VEHICLES.splice(i,1);
+    }
   }
 }
+
+/* ═══════════════════════════════════════════
+   PEDESTRIANS — war soldiers crossing
+═══════════════════════════════════════════ */
+let peds=[],lastPedSpawn=0,pedBeepT=0;
+const PED_SOLDIER_COLORS=['#4a5a2a','#3a4a1a','#5a6a2a','#6a7a3a','#334422'];
+const SKIN_COLORS=['#ffddaa','#f5c289','#c68642','#8d5524'];
+
+function spawnPed(){
+  const scene=document.getElementById('scene');const sceneH=scene.offsetHeight||310;const ROAD_H=100;
+  const goDown=Math.random()>.5;const startY=goDown?(sceneH-ROAD_H-12):(sceneH-6);
+  const speed=.5+Math.random()*.45;const xOffset=Math.floor(Math.random()*(ZEBRA_W-8));const pedX=zebraX+xOffset;
+  const skin=SKIN_COLORS[Math.floor(Math.random()*SKIN_COLORS.length)];
+  const uniform=PED_SOLDIER_COLORS[Math.floor(Math.random()*PED_SOLDIER_COLORS.length)];
+  const el=document.createElement('div');el.className='pedestrian';
+  el.innerHTML=`<div class="ped-head" style="background:${skin};border:1px solid #7a4a1e;"></div><div class="ped-body" style="background:${uniform};border:1px solid rgba(0,0,0,.5);"></div><div class="ped-leg-l" style="height:4px;background:#2a3a1a;"></div><div class="ped-leg-r" style="height:3px;background:#2a3a1a;"></div>`;
+  el.style.left=pedX+'px';el.style.top=startY+'px';
+  document.getElementById('pedLayer').appendChild(el);
+  peds.push({el,y:startY,x:pedX,speed:goDown?speed:-speed,goDown,legT:0,sceneH,ROAD_H});
+  playPedBeep();
+}
+function updatePeds(){
+  const canWalk=currentState==='RED';const now=Date.now();
+  if(canWalk&&now-lastPedSpawn>1400&&peds.length<5){lastPedSpawn=now;spawnPed();}
+  if(canWalk){pedBeepT++;if(pedBeepT%45===0)playPedBeep();}else pedBeepT=0;
+  for(let i=peds.length-1;i>=0;i--){
+    const p=peds[i];
+    if(!canWalk){p.el.remove();peds.splice(i,1);continue;}
+    p.y+=p.speed;p.el.style.top=p.y+'px';
+    p.legT++;const ll=p.el.querySelector('.ped-leg-l'),lr=p.el.querySelector('.ped-leg-r');
+    if(ll&&lr){const t=Math.floor(p.legT/7)%2;ll.style.height=t?'5px':'3px';lr.style.height=t?'3px':'5px';}
+    const doneDown=p.goDown&&p.y>p.sceneH+4;const doneUp=!p.goDown&&p.y<p.sceneH-p.ROAD_H-20;
+    if(doneDown||doneUp){p.el.remove();peds.splice(i,1);}
+  }
+}
+
+/* ═══════════════════════════════════════════
+   WAR CREATURES — tanks, planes, soldiers
+   Replace old fantasy creatures with military
+═══════════════════════════════════════════ */
+const PS=3;
+function drawPx(ctx,grid,pal,px){grid.forEach((row,y)=>{[...row].forEach((ch,x)=>{if(ch==='.'||!pal[ch])return;ctx.fillStyle=pal[ch];ctx.fillRect(x*px,y*px,px,px);});});}
+
+// WAR TANK pixel art
+const TANK_FRAMES=[
+  ['................','....TTTTT.......','...TTTTTTTTT....','..TTTTTTTTTT....','..TBBBTTTTTT....','..TTTTTTTTTT....','MMMMMMMMMMMMMM..','MMMMMMMMMMMMMMM.','................','................','................','................'],
+  ['................','....TTTTT.......','...TTTTTTTTT....','..TTTTTTTTTT....','..TTTTBBBTT.....','..TTTTTTTTTT....','MMMMMMMMMMMMMM..','MMMMMMMMMMMMMMM.','................','................','................','................'],
+];
+const TANK_PAL={T:'#4a5a2a',B:'#ffdd00',M:'#2a2a18'};
+
+// WAR SOLDIER pixel art
+const SOLDIER_FRAMES=[
+  ['...HHHH.........','..HHHHHHH.......','..HFFFHHH.......','..HFFFFFF.......','..HHHHHHH.......','...UUUUU........','..UUUUUUU.......','..UUUUUUU.......','...LL.LL........','...LL.LL........','...BB.BB........','................'],
+  ['...HHHH.........','..HHHHHHH.......','..HFFFHHH.......','..HFFFFFF.......','..HHHHHHH.......','...UUUUU........','..UUUUUUU.......','..UUUUUUU.......','..LL..LL........','..LL..LL........','..BB..BB........','................'],
+];
+const SOLDIER_PAL={H:'#4a5a2a',F:'#ffcc88',U:'#3a4a1a',L:'#2a3a10',B:'#1a1a0a'};
+
+// MILITARY PLANE pixel art
+const MPLANE_FRAMES=[
+  ['...........PPPP.','......PPPPPPPPPP','PPPPPPPPPPPPPPPP','......PPPPPPPPPP','...........PPPP.','................','................','................','................','................','................','................'],
+  ['...........PPPP.','......PPPPPPPPPP','PPPPPPPPPPPPPPP.','......PPPPPPPPPP','...........PPPP.','................','................','................','................','................','................','................'],
+];
+const MPLANE_PAL={P:'#4a5a2a'};
+
+// EXPLOSION pixel art (brief)
+const EXPLODE_FRAMES=[
+  ['................','...EEEE.........','..EEEEEEEE......','.EEEEEEEEEE.....','..EEEEEEEE......','...EEEE.........','................','................','................','................','................','................'],
+  ['................','................','....WWWW........','...WWWWWWW......','....WWWWWW......','................','................','................','................','................','................','................'],
+  ['................','................','................','....SSSSSS......','................','................','................','................','................','................','................','................'],
+];
+const EXPLODE_PAL={E:'#ff8800',W:'#ffffaa',S:'#ff4400'};
+
+const CDEFS=[
+  {n:'TANK',     f:TANK_FRAMES,    p:TANK_PAL,    w:14,h:8, px:PS,   spd:.7, z:'ground',glow:'rgba(80,100,0,.4)',  fps:280},
+  {n:'TANK',     f:TANK_FRAMES,    p:TANK_PAL,    w:14,h:8, px:PS,   spd:.5, z:'ground',glow:'rgba(80,100,0,.4)',  fps:320},
+  {n:'SOLDIER',  f:SOLDIER_FRAMES, p:SOLDIER_PAL, w:8, h:12,px:2,    spd:1.1,z:'ground',glow:'rgba(60,80,0,.3)',   fps:200},
+  {n:'SOLDIER',  f:SOLDIER_FRAMES, p:SOLDIER_PAL, w:8, h:12,px:2,    spd:1.4,z:'ground',glow:'rgba(60,80,0,.3)',   fps:180},
+  {n:'SOLDIER',  f:SOLDIER_FRAMES, p:SOLDIER_PAL, w:8, h:12,px:2,    spd:.9, z:'mid',   glow:'rgba(60,80,0,.3)',   fps:220},
+  {n:'FIGHTER',  f:MPLANE_FRAMES,  p:MPLANE_PAL,  w:16,h:3, px:PS,   spd:2.2,z:'sky',   glow:'rgba(80,120,0,.35)',fps:120},
+  {n:'FIGHTER',  f:MPLANE_FRAMES,  p:MPLANE_PAL,  w:16,h:3, px:PS,   spd:1.8,z:'sky',   glow:'rgba(80,120,0,.35)',fps:140},
+  {n:'EXPLODE',  f:EXPLODE_FRAMES, p:EXPLODE_PAL, w:16,h:12,px:PS,   spd:.1, z:'mid',   glow:'rgba(255,120,0,.4)', fps:140},
+];
+
+let creatures=[],cSpawnT=0;
+function spawnCreature(){
+  const sc=document.getElementById('scene'),W=sc.offsetWidth||800,H=sc.offsetHeight||310;
+  const layer=document.getElementById('creatureLayer');
+  const def=CDEFS[Math.floor(Math.random()*CDEFS.length)];
+  const cw=def.w*def.px,ch=def.h*def.px;
+  let yMin,yMax;
+  if(def.z==='sky'){yMin=2;yMax=H*.28;}
+  else if(def.z==='mid'){yMin=H*.22;yMax=H*.55;}
+  else{yMin=H*.52;yMax=H-115;}
+  const y=yMin+Math.random()*(yMax-yMin);
+  const goRight=Math.random()>.4;
+  const startX=goRight?-cw-10:W+10;
+  const spd=(goRight?1:-1)*def.spd;
+  const wrap=document.createElement('div');wrap.className='creature';
+  wrap.style.cssText=`left:${startX}px;top:${y}px;width:${cw}px;height:${ch}px;filter:drop-shadow(0 0 4px ${def.glow});`;
+  const tag=document.createElement('div');tag.className='creature-tag';tag.textContent=def.n;wrap.appendChild(tag);
+  const cvs=document.createElement('canvas');cvs.width=cw;cvs.height=ch;
+  cvs.style.cssText=`width:${cw}px;height:${ch}px;image-rendering:pixelated;`;
+  if(!goRight)cvs.style.transform='scaleX(-1)';
+  wrap.appendChild(cvs);layer.appendChild(wrap);
+  creatures.push({wrap,cvs,x:startX,y,spd,def,frame:0,lastFrame:performance.now(),goRight,cw,ch});
+}
+function drawCFrame(c){const ctx=c.cvs.getContext('2d');ctx.clearRect(0,0,c.cw,c.ch);drawPx(ctx,c.def.f[c.frame],c.def.p,c.def.px);}
+function updateCreatures(now){
+  const W=document.getElementById('scene')?.offsetWidth||800;
+  cSpawnT++;
+  if(cSpawnT>150&&creatures.length<7){cSpawnT=0;spawnCreature();if(Math.random()<.08)playExplosion();}
+  for(let i=creatures.length-1;i>=0;i--){
+    const c=creatures[i];
+    c.x+=c.spd;c.wrap.style.left=c.x+'px';
+    if(c.def.n==='SOLDIER'){c.y+=Math.sin(now*.002+i)*.3;c.wrap.style.top=c.y+'px';}
+    if(c.def.n==='EXPLODE'){c.wrap.style.top=(c.y+Math.sin(now*.005+i)*2)+'px';}
+    if(c.def.n==='FIGHTER'){c.wrap.style.top=(c.y+Math.sin(now*.001+i)*4)+'px';}
+    if(now-c.lastFrame>c.def.fps){c.lastFrame=now;c.frame=(c.frame+1)%c.def.f.length;drawCFrame(c);}
+    if((c.goRight&&c.x>W+c.cw+20)||(!c.goRight&&c.x<-c.cw-20)){c.wrap.remove();creatures.splice(i,1);}
+  }
+}
+function initCreatures(){setTimeout(spawnCreature,300);setTimeout(spawnCreature,900);setTimeout(spawnCreature,1800);setTimeout(spawnCreature,2800);}
 
 /* ═══════════════════════════════════════════
    CHARTS
 ═══════════════════════════════════════════ */
 let lChart,dChart;
 function initCharts(){
-  Chart.defaults.color='#555588';Chart.defaults.borderColor='#1a1a3a';Chart.defaults.font.family="'VT323', monospace";
-  lChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels:lineData.labels,datasets:[{label:'GREEN',data:lineData.green,borderColor:'#00ff44',backgroundColor:'rgba(0,255,68,.08)',tension:0,stepped:true,pointRadius:3,pointStyle:'rect'},{label:'YELLOW',data:lineData.yellow,borderColor:'#ffff00',backgroundColor:'rgba(255,255,0,.06)',tension:0,stepped:true,pointRadius:3,pointStyle:'rect'},{label:'RED',data:lineData.red,borderColor:'#ff3333',backgroundColor:'rgba(255,51,51,.06)',tension:0,stepped:true,pointRadius:3,pointStyle:'rect'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{font:{family:"'Press Start 2P'",size:7},boxWidth:10}}},scales:{x:{grid:{color:'#111'},ticks:{font:{size:8},maxTicksLimit:8}},y:{grid:{color:'#111'},ticks:{font:{size:8},stepSize:1,beginAtZero:true}}}}});
-  dChart=new Chart(document.getElementById('donutChart'),{type:'doughnut',data:{labels:['GREEN','YELLOW','RED'],datasets:[{data:[1,1,1],backgroundColor:['rgba(0,255,68,.7)','rgba(255,255,0,.7)','rgba(255,51,51,.7)'],borderColor:['#00ff44','#ffff00','#ff3333'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{family:"'Press Start 2P'",size:6},boxWidth:8,padding:6}}}}});
+  Chart.defaults.color='#445533';Chart.defaults.borderColor='#1a1a08';Chart.defaults.font.family="'VT323', monospace";
+  lChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels:lineData.labels,datasets:[{label:'GREEN',data:lineData.green,borderColor:'#44ff44',backgroundColor:'rgba(68,255,68,.06)',tension:0,stepped:true,pointRadius:3,pointStyle:'rect'},{label:'YELLOW',data:lineData.yellow,borderColor:'#ffdd00',backgroundColor:'rgba(255,221,0,.05)',tension:0,stepped:true,pointRadius:3,pointStyle:'rect'},{label:'RED',data:lineData.red,borderColor:'#ff2222',backgroundColor:'rgba(255,34,34,.05)',tension:0,stepped:true,pointRadius:3,pointStyle:'rect'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{font:{family:"'Press Start 2P'",size:7},boxWidth:10}}},scales:{x:{grid:{color:'#111'},ticks:{font:{size:8},maxTicksLimit:8}},y:{grid:{color:'#111'},ticks:{font:{size:8},stepSize:1,beginAtZero:true}}}}});
+  dChart=new Chart(document.getElementById('donutChart'),{type:'doughnut',data:{labels:['GREEN','YELLOW','RED'],datasets:[{data:[1,1,1],backgroundColor:['rgba(68,255,68,.7)','rgba(255,221,0,.7)','rgba(255,34,34,.7)'],borderColor:['#44ff44','#ffdd00','#ff2222'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{family:"'Press Start 2P'",size:6},boxWidth:8,padding:6}}}}});
 }
 function updateCharts(){
   const now=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -664,26 +1051,6 @@ function updateCharts(){
 }
 
 /* ═══════════════════════════════════════════
-   CREATURES
-═══════════════════════════════════════════ */
-const PS=3;
-function drawPx(ctx,grid,pal,px){grid.forEach((row,y)=>{[...row].forEach((ch,x)=>{if(ch==='.'||!pal[ch])return;ctx.fillStyle=pal[ch];ctx.fillRect(x*px,y*px,px,px);});});}
-const DF=[['....GGGG........','...GGGGGG.......','..GG.GGGG.GG.....','.GG..RRRR..GG...','GG...RYRR...GG..','G....RRRR....G..','.G...GGGGG...G..','.GG.GGGGGGG.GG..','..GGGGGGGGGGG...','...GGGGWGGGG....','....GGGGGGG.....','.....GGGGG......','......GGG.......','.......G........','................','................'],['................','....GGGG........','...GGGGGG.......', '.GG.RRRR.GG.....','GG..RYRR..GG....','G...RRRR...G....','.G..GGGGG..G....','.GGGGGGGGGGG....','..GGGGWGGGG.....','...GGGGGGG......','....GGGGG.......','.....GGG........','......G.........','................','................','................']];
-const DP={G:'#3a9a3a',R:'#cc2200',Y:'#ffee00',W:'#ffffff'};
-const BF=[['P.....PP.....P..','PP...PPPP...PP..','PPP.PPPPPP.PPP..','PPPPPPBBPPPPPP..','.PPPPPBBPPPPP...','..PPPPPPPPP.....','...PPPPPPP......','....PPPPP.......','.....PPP........','......P.........','................','................'],['................','................','...PP.BB.PP.....','..PPPPPPPPP.....','.PPPPPBBPPPPP...','PPPPPPBBPPPPPP..','PPP.PPPPPP.PPP..','PP...PPPP...PP..','P.....PP.....P..','................','................','................']];
-const BP={P:'#6633aa',B:'#ff4488'};
-const GHF=[['...WWWWW........','..WWWWWWW.......', '.WWWWWWWWW......','.WBBWWWBBW......','.WBBWWWBBW......','.WWWWWWWWW......','.WWWWWWWWW......','.WWWWWWWWW......','.WWWWWWWWW......','.W.W.W.W.W......','................','................'],['................','...WWWWW........','..WWWWWWW.......', '.WWWWWWWWW......','.WBBWWWBBW......','.WBBWWWBBW......','.WWWWWWWWW......','.WWWWWWWWW......','.WWWWWWWWW......','.W.W.W.W.W......','................','................']];
-const GHP={W:'rgba(220,220,255,0.85)',B:'#3355ff'};
-const SLF=[['................','....SSSSS.......','...SSSSSSS......','..SSSESSSS......','..SSSSSESS......','..SSSSSSSSS.....','..SSSSSSSSS.....','..SSSSSSSSS.....','...SSSSSSS......','................','................','................'],['................','................','....SSSSS.......','...SSSSSSS......','..SSSESSSS......','..SSSSSESS......','..SSSSSSSSS.....','..SSSSSSSSS.....','...SSSSSSS......','....SSSSS.......','................','................']];
-const SLP={S:'#22ddaa',E:'#001133'};
-const CDEFS=[{n:'DRAGON',f:DF,p:DP,w:16,h:16,px:PS,spd:1.2,z:'sky',glow:'rgba(50,200,50,.3)',fps:120},{n:'DRAGON',f:DF,p:DP,w:16,h:16,px:PS,spd:.8,z:'sky',glow:'rgba(50,200,50,.3)',fps:150},{n:'BAT',f:BF,p:BP,w:16,h:12,px:PS,spd:2.0,z:'sky',glow:'rgba(100,50,170,.4)',fps:200},{n:'BAT',f:BF,p:BP,w:16,h:12,px:PS,spd:1.6,z:'sky',glow:'rgba(100,50,170,.4)',fps:180},{n:'GHOST',f:GHF,p:GHP,w:16,h:12,px:PS,spd:.6,z:'mid',glow:'rgba(200,200,255,.3)',fps:300},{n:'GHOST',f:GHF,p:GHP,w:16,h:12,px:PS,spd:.9,z:'mid',glow:'rgba(200,200,255,.3)',fps:250},{n:'SLIME',f:SLF,p:SLP,w:16,h:12,px:2,spd:.5,z:'ground',glow:'rgba(30,220,160,.3)',fps:400},{n:'SLIME',f:SLF,p:SLP,w:16,h:12,px:2,spd:.7,z:'ground',glow:'rgba(30,220,160,.3)',fps:350}];
-let creatures=[],cSpawnT=0;
-function spawnCreature(){const sc=document.getElementById('scene'),W=sc.offsetWidth||800,H=sc.offsetHeight||310,layer=document.getElementById('creatureLayer'),def=CDEFS[Math.floor(Math.random()*CDEFS.length)],cw=def.w*def.px,ch=def.h*def.px;let yMin,yMax;if(def.z==='sky'){yMin=5;yMax=H*.32;}else if(def.z==='mid'){yMin=H*.22;yMax=H*.52;}else{yMin=H*.52;yMax=H-110;}const y=yMin+Math.random()*(yMax-yMin),goRight=Math.random()>.5,startX=goRight?-cw-10:W+10,spd=(goRight?1:-1)*def.spd;const wrap=document.createElement('div');wrap.className='creature';wrap.style.cssText=`left:${startX}px;top:${y}px;width:${cw}px;height:${ch}px;filter:drop-shadow(0 0 6px ${def.glow});`;const tag=document.createElement('div');tag.className='creature-tag';tag.textContent=def.n;wrap.appendChild(tag);const cvs=document.createElement('canvas');cvs.width=cw;cvs.height=ch;cvs.style.cssText=`width:${cw}px;height:${ch}px;image-rendering:pixelated;`;if(!goRight)cvs.style.transform='scaleX(-1)';wrap.appendChild(cvs);layer.appendChild(wrap);creatures.push({wrap,cvs,x:startX,y,spd,def,frame:0,lastFrame:performance.now(),goRight,cw,ch});}
-function drawCFrame(c){const ctx=c.cvs.getContext('2d');ctx.clearRect(0,0,c.cw,c.ch);drawPx(ctx,c.def.f[c.frame],c.def.p,c.def.px);}
-function updateCreatures(now){const W=document.getElementById('scene')?.offsetWidth||800;cSpawnT++;if(cSpawnT>200&&creatures.length<5){cSpawnT=0;spawnCreature();}for(let i=creatures.length-1;i>=0;i--){const c=creatures[i];c.x+=c.spd;c.wrap.style.left=c.x+'px';if(c.def.n==='GHOST'){c.y+=Math.sin(now*.002+i)*.4;c.wrap.style.top=c.y+'px';}if(c.def.n==='SLIME')c.wrap.style.top=(c.y-Math.abs(Math.sin(now*.004+i*1.5))*6)+'px';if(c.def.n==='DRAGON')c.wrap.style.top=(c.y+Math.sin(now*.0015+i)*5)+'px';if(now-c.lastFrame>c.def.fps){c.lastFrame=now;c.frame=(c.frame+1)%c.def.f.length;drawCFrame(c);}if((c.goRight&&c.x>W+c.cw+20)||(!c.goRight&&c.x<-c.cw-20)){c.wrap.remove();creatures.splice(i,1);}}}
-function initCreatures(){setTimeout(spawnCreature,500);setTimeout(spawnCreature,1500);setTimeout(spawnCreature,3000);}
-
-/* ═══════════════════════════════════════════
    TRAFFIC LIGHT UI
 ═══════════════════════════════════════════ */
 let prevSoundState='';
@@ -691,50 +1058,93 @@ function updateLights(state){
   const r=document.getElementById('bulbRed'),y=document.getElementById('bulbYellow'),g=document.getElementById('bulbGreen');
   r.className='tl-bulb';y.className='tl-bulb';g.className='tl-bulb';
   const lbl=document.getElementById('stateLabel');lbl.className='state-banner';
-  if(state==='BLINK'){r.className+=' red-on blink-anim';y.className+=' yellow-on blink-anim';g.className+=' green-on blink-anim';lbl.textContent='⚡ BLINK';lbl.classList.add('yellow');}
-  else if(state==='RED'){r.className+=' red-on';y.className+=' yellow-off';g.className+=' green-off';lbl.textContent='🔴 STOP';lbl.classList.add('red');}
-  else if(state==='YELLOW'){r.className+=' red-off';y.className+=' yellow-on';g.className+=' green-off';lbl.textContent='🟡 WAIT';lbl.classList.add('yellow');}
-  else if(state==='GREEN'){r.className+=' red-off';y.className+=' yellow-off';g.className+=' green-on';lbl.textContent='🟢 GO!';lbl.classList.add('green');}
-  else{r.className+=' red-off';y.className+=' yellow-off';g.className+=' green-off';lbl.textContent='-- OFF --';lbl.classList.add('off');}
+  if(state==='BLINK'){r.className+=' red-on blink-anim';y.className+=' yellow-on blink-anim';g.className+=' green-on blink-anim';lbl.textContent='⚡ ALERT';lbl.classList.add('yellow');}
+  else if(state==='RED'){r.className+=' red-on';y.className+=' yellow-off';g.className+=' green-off';lbl.textContent='🔴 HALT';lbl.classList.add('red');}
+  else if(state==='YELLOW'){r.className+=' red-off';y.className+=' yellow-on';g.className+=' green-off';lbl.textContent='🟡 CAUTION';lbl.classList.add('yellow');}
+  else if(state==='GREEN'){r.className+=' red-off';y.className+=' yellow-off';g.className+=' green-on';lbl.textContent='🟢 MOVE OUT';lbl.classList.add('green');}
+  else{r.className+=' red-off';y.className+=' yellow-off';g.className+=' green-off';lbl.textContent='-- OFFLINE --';lbl.classList.add('off');}
 }
 function updateCountdown(secs,state){
   const num=document.getElementById('cdNum'),bar=document.getElementById('cdBar');
   const max=state==='YELLOW'?2:5;
-  num.textContent=secs>0?String(secs).padStart(2,'0'):'--';num.className='cd-number '+(state||'').toLowerCase();
+  num.textContent=secs>0?String(secs).padStart(2,'0'):'--';
+  num.className='cd-number '+(state||'').toLowerCase();
   bar.style.width=(max>0?Math.min(100,(secs/max)*100):0)+'%';
   bar.style.background=state==='GREEN'?'var(--green)':state==='YELLOW'?'var(--yellow)':state==='RED'?'var(--red)':'#333';
 }
-function updateSceneBulbs(state){['r','y','g'].forEach(c=>{document.getElementById('sb-'+c).className='sbulb '+c;});if(state==='RED')document.getElementById('sb-r').classList.add('on');if(state==='YELLOW')document.getElementById('sb-y').classList.add('on');if(state==='GREEN')document.getElementById('sb-g').classList.add('on');if(state==='BLINK')['r','y','g'].forEach(c=>document.getElementById('sb-'+c).classList.add('on','blink-anim'));}
-function updateRoad(state){const s1=document.getElementById('stripe1'),s2=document.getElementById('stripe2');if(!s1||!s2)return;[s1,s2].forEach(s=>{s.className='road-stripe '+(s===s1?'lane1':'lane2');});if(state==='GREEN')[s1,s2].forEach(s=>s.classList.add('moving-r'));else if(state==='YELLOW')[s1,s2].forEach(s=>s.classList.add('slow-r'));else[s1,s2].forEach(s=>s.classList.add('stopped'));}
-function updateModeDisplay(mode){[0,1,2].forEach(m=>{const e=document.getElementById('m'+m);e.textContent=m===mode?'◉':'○';e.classList.toggle('active',m===mode);});document.getElementById('modeVal').textContent={0:'OFF',1:'NRM',2:'BLK'}[mode]||'---';}
+function updateSceneBulbs(state){
+  ['r','y','g'].forEach(c=>{document.getElementById('sb-'+c).className='sbulb '+c;});
+  if(state==='RED')    document.getElementById('sb-r').classList.add('on');
+  if(state==='YELLOW') document.getElementById('sb-y').classList.add('on');
+  if(state==='GREEN')  document.getElementById('sb-g').classList.add('on');
+  if(state==='BLINK')  ['r','y','g'].forEach(c=>document.getElementById('sb-'+c).classList.add('on','blink-anim'));
+}
+function updateRoad(state){
+  const s1=document.getElementById('stripe1'),s2=document.getElementById('stripe2');
+  if(!s1||!s2)return;
+  [s1,s2].forEach(s=>{s.className='road-stripe '+(s===s1?'lane1':'lane2');});
+  if(state==='GREEN')[s1,s2].forEach(s=>s.classList.add('moving-r'));
+  else if(state==='YELLOW')[s1,s2].forEach(s=>s.classList.add('slow-r'));
+  else[s1,s2].forEach(s=>s.classList.add('stopped'));
+}
+function updateModeDisplay(mode){
+  [0,1,2].forEach(m=>{const e=document.getElementById('m'+m);e.textContent=m===mode?'◉':'○';e.classList.toggle('active',m===mode);});
+  document.getElementById('modeVal').textContent={0:'HALT',1:'NRM',2:'ALRT'}[mode]||'---';
+}
 function updateScore(){document.getElementById('scoreVal').textContent=String(score).padStart(6,'0');}
 function setFbStatus(ok){document.getElementById('fbDot').className='pill-dot '+(ok?'on':'off');document.getElementById('fbLabel').textContent=ok?'FIREBASE':'OFFLINE';}
 function setEspStatus(ok){document.getElementById('espDot').className='pill-dot '+(ok?'on':'');document.getElementById('espLabel').textContent=ok?'ESP32 ON':'ESP32 OFF';}
-function addLog(msg,cls=''){const log=document.getElementById('eventLog'),t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});const e=document.createElement('div');e.className='log-entry';e.innerHTML=`<span class="log-time">${t}</span><span class="log-msg ${cls}">${msg}</span>`;log.prepend(e);while(log.children.length>10)log.removeChild(log.lastChild);}
-function updateClock(){document.getElementById('clockDisplay').textContent=new Date().toLocaleTimeString('en',{hour12:false});const el=Math.floor((Date.now()-startTime)/1000);document.getElementById('uptimeVal').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0');}
-
-/* ═══════════════════════════════════════════
-   FIREBASE
-═══════════════════════════════════════════ */
-function sendCommand(mode){currentMode=mode;updateModeDisplay(mode);score+=50;updateScore();if(db){db.ref('/trafficLight/mode').set(mode);addLog(`CMD MODE=${mode}`,mode===1?'green':mode===2?'yellow':'red');}else addLog('NOT CONNECTED','red');}
-function applyState(state,mode,countdown){
-  const prev=currentState;currentState=state;currentMode=mode;
-  if(prev!==state){
-    if(state!=='OFF'&&state!=='BLINK'){if(metrics[state]!==undefined){metrics[state]++;metrics.total++;if(state==='GREEN'&&prev==='RED'){cycleCount++;score+=200;updateScore();}if(state==='RED'){waitEvents++;totalWaitTime+=5;}}updateCharts();}
-    if(state!==prevSoundState){playLightChime(state);prevSoundState=state;}
-    addLog('STATE→'+state,state==='GREEN'?'green':state==='RED'?'red':state==='YELLOW'?'yellow':'blue');
-  }
-  updateLights(state);updateCountdown(countdown,state);updateModeDisplay(mode);updateSceneBulbs(state);updateRoad(state);setEspStatus(state!=='OFF');
-  document.getElementById('m-green').textContent=metrics.GREEN;document.getElementById('m-yellow').textContent=metrics.YELLOW;document.getElementById('m-red').textContent=metrics.RED;document.getElementById('m-total').textContent=metrics.total;document.getElementById('m-avg').textContent=waitEvents>0?Math.round(totalWaitTime/waitEvents):0;
-  document.getElementById('cycleVal').textContent=cycleCount;document.getElementById('prevVal').textContent=prev!==state&&prev!=='OFF'?prev.slice(0,3):'---';
+function addLog(msg,cls=''){
+  const log=document.getElementById('eventLog'),t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const e=document.createElement('div');e.className='log-entry';
+  e.innerHTML=`<span class="log-time">${t}</span><span class="log-msg ${cls}">${msg}</span>`;
+  log.prepend(e);while(log.children.length>10)log.removeChild(log.lastChild);
+}
+function updateClock(){
+  document.getElementById('clockDisplay').textContent=new Date().toLocaleTimeString('en',{hour12:false});
+  const el=Math.floor((Date.now()-startTime)/1000);
+  document.getElementById('uptimeVal').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0');
 }
 
 /* ═══════════════════════════════════════════
-   GAME LOOP
+   FIREBASE + STATE
+═══════════════════════════════════════════ */
+function sendCommand(mode){
+  currentMode=mode;updateModeDisplay(mode);score+=50;updateScore();
+  if(db){db.ref('/trafficLight/mode').set(mode);addLog(`COMMAND MODE=${mode}`,mode===1?'green':mode===2?'yellow':'red');}
+  else addLog('NOT CONNECTED','red');
+}
+function applyState(state,mode,countdown){
+  const prev=currentState;currentState=state;currentMode=mode;
+  if(prev!==state){
+    if(state!=='OFF'&&state!=='BLINK'){
+      if(metrics[state]!==undefined){
+        metrics[state]++;metrics.total++;
+        if(state==='GREEN'&&prev==='RED'){cycleCount++;score+=200;updateScore();}
+        if(state==='RED'){waitEvents++;totalWaitTime+=5;}
+      }
+      updateCharts();
+    }
+    if(state!==prevSoundState){playLightChime(state);prevSoundState=state;}
+    addLog('SIGNAL→'+state,state==='GREEN'?'green':state==='RED'?'red':state==='YELLOW'?'yellow':'blue');
+  }
+  updateLights(state);updateCountdown(countdown,state);updateModeDisplay(mode);
+  updateSceneBulbs(state);updateRoad(state);setEspStatus(state!=='OFF');
+  document.getElementById('m-green').textContent=metrics.GREEN;
+  document.getElementById('m-yellow').textContent=metrics.YELLOW;
+  document.getElementById('m-red').textContent=metrics.RED;
+  document.getElementById('cycleVal').textContent=cycleCount;
+  document.getElementById('prevVal').textContent=prev!==state&&prev!=='OFF'?prev.slice(0,3):'---';
+}
+
+/* ═══════════════════════════════════════════
+   MAIN GAME LOOP
 ═══════════════════════════════════════════ */
 function gameLoop(ts=performance.now()){
   updateAllVehicles();
+  updateAirVehicles();
   updatePeds();
+  updateEnforcers();
   updateCreatures(ts);
   requestAnimationFrame(gameLoop);
 }
@@ -743,31 +1153,27 @@ function gameLoop(ts=performance.now()){
    BOOT
 ═══════════════════════════════════════════ */
 window.addEventListener('load',()=>{
-  initStars(); initBuildings(); initCreatures(); initCharts();
+  initStars();initBuildings();initCreatures();initCharts();
 
-  // Init zebra after layout is computed
   requestAnimationFrame(()=>{
     initZebra();
-    // Start vehicles a beat after zebra is positioned
-    setTimeout(()=>spawnVehicle('front'), 300);
-    setTimeout(()=>spawnVehicle('front'),1400);
-    setTimeout(()=>spawnVehicle('back'),  900);
+    setTimeout(()=>spawnVehicle('front'),300);
+    setTimeout(()=>spawnVehicle('front'),1200);
+    setTimeout(()=>spawnVehicle('back'), 800);
+    setTimeout(()=>spawnVehicle('front'),2200);
   });
 
   document.getElementById('stripe1').className='road-stripe lane1 moving-r';
   document.getElementById('stripe2').className='road-stripe lane2 moving-r';
 
   gameLoop();
-  setInterval(updateClock,1000);
-  updateClock();
-  addLog('SYSTEM BOOT OK','green');
-  addLog('INSERT COIN','yellow');
+  setInterval(updateClock,1000);updateClock();
+  addLog('🪖 WARZONE SYSTEM ONLINE','green');
+  addLog('ALL UNITS STAND BY','yellow');
 
-  // Unlock audio on first user interaction
-  document.addEventListener('click', ()=>{ getCtx(); startAmbient(); },{ once:true });
-  document.addEventListener('keydown',()=>{ getCtx(); startAmbient(); },{ once:true });
+  document.addEventListener('click', ()=>{getCtx();startAmbient();},{once:true});
+  document.addEventListener('keydown',()=>{getCtx();startAmbient();},{once:true});
 
-  // Firebase
   try{
     const app=firebase.initializeApp(firebaseConfig);
     db=firebase.database(app);
@@ -776,7 +1182,7 @@ window.addEventListener('load',()=>{
       if(d)applyState(d.trafficLightState||'OFF',d.mode||0,d.countdown||0);
     });
     setFbStatus(true);addLog('FIREBASE CONNECTED','green');
-  } catch(e){ addLog('FIREBASE ERR: '+e.message,'red');setFbStatus(false); }
+  } catch(e){addLog('FIREBASE ERR: '+e.message,'red');setFbStatus(false);}
 });
 </script>
 </body>

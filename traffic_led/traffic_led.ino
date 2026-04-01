@@ -19,8 +19,8 @@
 #include <ArduinoJson.h>
 
 // ─── WiFi Credentials ──────────────────────────────
-#define WIFI_SSID     "ANG PASSWORD KAY MissUBibi"
-#define WIFI_PASSWORD "@RubinFamily2026"
+#define WIFI_SSID     "Connect lang"
+#define WIFI_PASSWORD "password"
 
 // ─── Firebase Credentials ──────────────────────────
 #define FIREBASE_HOST "https://traffic-light-434eb-default-rtdb.firebaseio.com"
@@ -32,9 +32,9 @@
 #define GREEN_PIN  21
 
 // ─── Traffic Light Timing (milliseconds) ───────────
-#define GREEN_DURATION  25000
+#define GREEN_DURATION  10000
 #define YELLOW_DURATION 3000
-#define RED_DURATION    50000
+#define RED_DURATION    20000
 #define BLINK_INTERVAL  300
 
 // ─── Firebase Objects ───────────────────────────────
